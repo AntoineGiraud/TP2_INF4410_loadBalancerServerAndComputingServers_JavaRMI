@@ -25,28 +25,28 @@ public class Fichier implements Serializable {
 	 */
 	private static final long serialVersionUID = 5848260167280425933L;
 	private String nom;
-	private Integer serverCalculid;
+	private Integer serverRepartiteurid;
 	private byte[] contenu;
 	
 	public Fichier(String nom){
 		this.nom = nom;
-		this.serverCalculid = 0;
+		this.serverRepartiteurid = 0;
 		this.setFromFile("");
 	}
 	public Fichier(String nom,String path){
 		this.nom = nom;
-		this.serverCalculid = 0;
+		this.serverRepartiteurid = 0;
 		this.setFromFile(path);
 	}
 	
 	/**
 	 * <p>Va à la fois répondre si le fichier est vérouillé et le vérouiller si l'on peut le faire.</p>
-	 * @param serverCalculId int Identifiant du serverCalcul qui cherche à vérouiller le fichier
+	 * @param serverRepartiteurId int Identifiant du serverRepartiteur qui cherche à vérouiller le fichier
 	 * @return boolean Est ce que le fichier est vérouillé ou non
 	 */
-	public boolean lockFile(int serverCalculId){
-		if(this.serverCalculid == 0 || this.serverCalculid == serverCalculId){ // Le fichier n'appartient pas à qqn (ou à la limite on l'a déjà locké nous même), on peut le locker
-			this.serverCalculid = serverCalculId;
+	public boolean lockFile(int serverRepartiteurId){
+		if(this.serverRepartiteurid == 0 || this.serverRepartiteurid == serverRepartiteurId){ // Le fichier n'appartient pas à qqn (ou à la limite on l'a déjà locké nous même), on peut le locker
+			this.serverRepartiteurid = serverRepartiteurId;
 			return true;
 		}
 		return false;
@@ -55,14 +55,14 @@ public class Fichier implements Serializable {
 	 * Fonction pour dévérouiller le fichier, on remet l'identifiant à 0 car il ne correspond à personne
 	 */
 	public void unlockFile(){
-		this.serverCalculid = 0;
+		this.serverRepartiteurid = 0;
 	}
 	
 	public String getNomFichier(){
 		return this.nom;
 	}
-	public int getServerCalculId(){
-		return this.serverCalculid;
+	public int getServerRepartiteurId(){
+		return this.serverRepartiteurid;
 	}
 	/**
 	 * Retourne le contenu du fichier contenu dans la "mémoire vive". Ce n'est pas forcément ce qui est dans le fichier du même nom sur le disque dur.

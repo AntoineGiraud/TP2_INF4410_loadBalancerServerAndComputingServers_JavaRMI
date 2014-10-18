@@ -14,8 +14,8 @@
 	</target>
 	<target name="clean">
 		<delete dir="bin" />
-		<delete file="serverRepartiteur.jar" />
 		<delete file="serverCalcul.jar" />
+		<delete file="serverRepartiteur.jar" />
 		<delete file="shared.jar" />
 	</target>
 	<target depends="init" name="build-class">
@@ -26,7 +26,7 @@
 	</target>
 	<target depends="build-class" name="build-jar">
 		<jar destfile="shared.jar" basedir="bin" includes="ca/polymtl/inf4410/tp2/shared/**" update="false" />
-		<jar destfile="serverRepartiteur.jar" basedir="bin" includes="ca/polymtl/inf4410/tp2/serverRepartiteur/**" update="false" />
 		<jar destfile="serverCalcul.jar" basedir="bin" includes="ca/polymtl/inf4410/tp2/serverCalcul/**" update="false" />
+		<jar destfile="serverRepartiteur.jar" basedir="bin" includes="ca/polymtl/inf4410/tp2/serverRepartiteur/**" update="false" />
 	</target>
 </project>

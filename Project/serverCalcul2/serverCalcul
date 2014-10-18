@@ -4,4 +4,4 @@ pushd $(dirname $0) > /dev/null
 basepath=$(pwd)
 popd > /dev/null
 
-java -cp $basepath/../serverCalcul.jar:$basepath/../shared.jar -Djava.security.policy=$basepath/../policy ca.polymtl.inf4410.tp2.serverCalcul.ServerCalcul $*
+java -cp $basepath/../serverRepartiteur.jar:$basepath/../shared.jar -Djava.security.policy=$basepath/../policy ca.polymtl.inf4410.tp2.serverRepartiteur.ServerRepartiteur $*

@@ -18,7 +18,7 @@ import java.util.Hashtable;
  * @author Antoine Giraud #1761581
  *
  */
-public interface ServerRepartiteurInterface extends Remote {
+public interface ServerCalculInterface extends Remote {
 	
 	/**
 	 * <p>Génère un identifiant unique pour le serverRepartiteur.<br>
