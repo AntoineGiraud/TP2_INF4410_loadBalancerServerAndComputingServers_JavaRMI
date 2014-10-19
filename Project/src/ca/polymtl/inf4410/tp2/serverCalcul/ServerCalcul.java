@@ -22,12 +22,24 @@ import ca.polymtl.inf4410.tp2.shared.Tache;
 public class ServerCalcul implements ServerCalculInterface {
 
 	public static void main(String[] args) {
-		ServerCalcul server = new ServerCalcul();
+		final ServerCalcul server = new ServerCalcul();
 		server.run();
+		
+		Runtime.getRuntime().addShutdownHook(new Thread() {
+		    public void run() {
+		    	try {
+		    		Registry registry = LocateRegistry.getRegistry("127.0.0.1", 5000);
+					registry.unbind("serverCalcul"+server.portEcouteStubRMI);
+				} catch (AccessException e) { e.printStackTrace(); }
+		    	  catch (RemoteException e) { e.printStackTrace(); }
+		    	  catch (NotBoundException e) {	e.printStackTrace(); }
+		    	System.out.println("Weee i'm shuting dooown");
+		    }
+		 });
 	}
 	
 	private boolean malicious;
-	private int portEcouteStubRMI,
+	protected int portEcouteStubRMI,
 				quantiteRessources;
 	
 	public ServerCalcul() {

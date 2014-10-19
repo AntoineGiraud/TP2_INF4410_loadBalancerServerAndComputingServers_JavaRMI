@@ -96,10 +96,11 @@ public class ServerRepartiteur {
 				}
 			}
 		};
-		this.updateServerListThread.start();
+		
 	}
 
 	private void compute(String path) {
+		
 		File file = new File(path);
 		if (!file.exists()) {
 			System.out.println("Erreur, le fichier n'existe pas");
@@ -110,6 +111,7 @@ public class ServerRepartiteur {
 		work.show();
 
 		// On va effectuer les tâches...
+		this.updateServerListThread.start();
 		ExecutorService executorService = Executors.newFixedThreadPool(10);
 		ArrayList<Future<Tache>> FutureRetoursDesServeurs = new ArrayList<Future<Tache>>();
 		
@@ -207,7 +209,7 @@ public class ServerRepartiteur {
 			System.out
 					.println("Aucuns Serveurs n'est pour l'instant enregistré dans le RMI.");
 		}
-
+		
 	}
 
 	private synchronized void refreshServerList() {
@@ -252,9 +254,9 @@ public class ServerRepartiteur {
 					if (stub != null && stub.ping()) {
 						ServerDispos.put(serverName, stub);
 						newServers += serverName + ", ";
-					} else {
-						System.out.println("Error, can't contact " + serverName
-								+ ", ");
+					} else { // Je ne devrais jamais arriver ici, il sertait tombé dans le Catch
+						System.out.print(serverName + " non joignable. ");
+						unbind(serverName);
 					}
 				} catch (RemoteException e1) {
 					System.out.print(serverName + " non joignable. ");
