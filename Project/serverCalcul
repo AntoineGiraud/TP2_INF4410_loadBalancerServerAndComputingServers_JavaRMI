@@ -4,7 +4,7 @@ pushd $(dirname $0) > /dev/null
 basepath=$(pwd)
 popd > /dev/null
 
-# Option a ajustet et ajouter pour lancer un serveur a distance.
+# Option a ajuster et ajouter pour lancer un serveur a distance.
 #  -Djava.rmi.server.hostname=mycomputer.example.com \
 
 java -cp $basepath/serverCalcul.jar:$basepath/shared.jar \

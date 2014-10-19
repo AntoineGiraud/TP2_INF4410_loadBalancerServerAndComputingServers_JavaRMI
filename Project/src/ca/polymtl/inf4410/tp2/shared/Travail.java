@@ -14,7 +14,7 @@ public class Travail {
 		int result = 0;
 		for (int i = 0; i < work.Taches.size(); i++) {
 			Tache task = work.Taches.get(i);
-			result = (result + task.execute() % 5000 ) % 5000;
+			result = (result + task.compute() % 5000 ) % 5000;
 			System.out.println(result);
 		}
 		System.out.println("Résultat calculé : "+result);

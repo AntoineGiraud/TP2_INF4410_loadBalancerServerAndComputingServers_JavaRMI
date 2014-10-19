@@ -19,7 +19,7 @@ public class Tache {
 	public void add(Operation Op) {
 		this.Operations.add(Op);
 	}
-	public int execute() {
+	public int compute() {
 		this.setToInProgressState();
 		this.resultat = 0;
 		for (Operation operation : this.Operations) {
