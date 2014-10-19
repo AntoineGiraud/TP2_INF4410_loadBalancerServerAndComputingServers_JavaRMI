@@ -26,13 +26,14 @@ public class ServerCalcul implements ServerCalculInterface {
 		server.run();
 	}
 	
-	public String serverCalculName;
-	private int portEcouteStubRMI;
+	private boolean malicious;
+	private int portEcouteStubRMI,
+				quantiteRessources;
 	
 	public ServerCalcul() {
 		super();
-		this.readServerRepartiteurIdFromFile();
-		this.writeServerRepartiteurIdInFile();
+		this.readServerPropertiesFromFile();
+		this.writeServerPropertiesInFile();
 		if (this.portEcouteStubRMI < 5000 || this.portEcouteStubRMI > 5050) {
 			System.out.println("Attention à prendre un numero de port compris entre 5000 et 5050 pour pouvoir être éxécuté dans la salle de TP.");
 		}
@@ -63,20 +64,24 @@ public class ServerCalcul implements ServerCalculInterface {
 	}
 
 	@Override
-	public int compute(Tache task) throws RemoteException {
-		return task.compute();
+	public Tache compute(Tache task) throws RemoteException {
+		System.out.println("Demande de Compute pour "+task.getAssignedTo());
+		task.compute();
+		return task;
 	}
 	
 	/**
 	 * <p>Fonction pour lire l'ID que l'on s'est vu attribuer par le serveur<br>
 	 * On utilise la classe {@link Properties} pour nous aider à gérer plus facilement notre fichier de conf...</p>
 	 */
-	private void readServerRepartiteurIdFromFile() {
+	private void readServerPropertiesFromFile() {
 		Properties properties = new Properties();
 		File f = new File("ServerCalcul.properties");
         if (!f.exists()) { try { 
         	f.createNewFile(); // Si le fichier n'existait pas on le créé
-        	this.portEcouteStubRMI = 0; // On a alors pas d'ID déjà donc on fixe 0
+        	this.portEcouteStubRMI = 0;
+        	this.quantiteRessources = 5;
+        	this.malicious = false;
         } catch (IOException e1) { e1.printStackTrace();}}
         else{
 	        FileInputStream fileInputStream = null;
@@ -88,9 +93,13 @@ public class ServerCalcul implements ServerCalculInterface {
 				fileInputStream.close();
 			} catch (IOException e) { e.printStackTrace(); }
 	        if (fileInputStream != null) { // Si on a réussi à ouvrir le fichier
-	        	this.portEcouteStubRMI = properties.isEmpty() ? 0 : Integer.valueOf(properties.getProperty("portEcouteStubRMI"));
+	        	this.portEcouteStubRMI = properties.getProperty("portEcouteStubRMI") == null ? 0 : Integer.valueOf(properties.getProperty("portEcouteStubRMI"));
+	        	this.quantiteRessources = properties.getProperty("quantiteRessources") == null ? 5 : Integer.valueOf(properties.getProperty("quantiteRessources"));
+	        	this.malicious = properties.getProperty("malicious") == null ? false : Boolean.valueOf(properties.getProperty("malicious"));
 	        }else{
 	        	this.portEcouteStubRMI = 0;
+	        	this.quantiteRessources = 5;
+	        	this.malicious = false;
 	        }
         }
 	}
@@ -98,9 +107,11 @@ public class ServerCalcul implements ServerCalculInterface {
 	 * <p>Fonction pour écrire l'ID que l'on s'est vu attribuer par le serveur<br>
 	 * On utilise la classe {@link Properties} pour nous aider à gérer plus facilement notre fichier de conf...</p>
 	 */
-	private void writeServerRepartiteurIdInFile() {
+	private void writeServerPropertiesInFile() {
         Properties properties = new Properties();
         properties.setProperty("portEcouteStubRMI", Integer.toString(this.portEcouteStubRMI));
+        properties.setProperty("quantiteRessources", Integer.toString(this.quantiteRessources));
+        properties.setProperty("malicious", Boolean.toString(this.malicious));
 
         //Store in the properties file
         File f = new File("ServerCalcul.properties");
@@ -110,5 +121,10 @@ public class ServerCalcul implements ServerCalculInterface {
 			fileOutputStream.close();
 		} catch (FileNotFoundException e) { e.printStackTrace(); }
           catch (IOException e) { e.printStackTrace(); }
+	}
+
+	@Override
+	public boolean ping() throws RemoteException {
+		return true;
 	}
 }

@@ -8,14 +8,16 @@ import java.util.ArrayList;
 
 public class Travail {
 	public static void main(String[] args) {
-		Travail work = new Travail("/Documents/School/PolyMtl/Java/TP2_INF4410_1761581/Fichiers_fournis_TP2_INF4410/donnees-2317.txt");
+		Travail work = new Travail("/Documents/School/PolyMtl/Java/TP2_INF4410_1761581/Project/data_files/donnees-2684.txt");
 		work.show();
 		
 		int result = 0;
 		for (int i = 0; i < work.Taches.size(); i++) {
 			Tache task = work.Taches.get(i);
-			result = (result + task.compute() % 5000 ) % 5000;
-			System.out.println(result);
+			task.compute();
+			work.addToComputedResult(task.getResultat());
+			result = (result + task.getResultat() % 5000 ) % 5000;
+			System.out.println(work.computedResult);
 		}
 		System.out.println("Résultat calculé : "+result);
 		System.out.println("Résultat attendu : "+work.expectedResult);
@@ -25,11 +27,13 @@ public class Travail {
 	public ArrayList<Tache> Taches;
 	public int expectedResult;
 	private int tacheOperationsLoad;
+	public int computedResult = 0;
 	
 	public Travail(String path) {
 		this.Operations = getOperationsFromFile(path);
 		this.expectedResult = getExpectedResult(path);
-		this.tacheOperationsLoad = 10;
+		this.tacheOperationsLoad = 2;
+		
 		
 		Taches = new ArrayList<Tache>();
 		cutWorkInTasks(); // On va découper notre travail en taches
@@ -98,5 +102,9 @@ public class Travail {
 			tache.show();
 			i++;
 		}
+	}
+
+	public void addToComputedResult(Integer resultat) {
+		this.computedResult = (this.computedResult + resultat % 5000 ) % 5000;
 	}
 }

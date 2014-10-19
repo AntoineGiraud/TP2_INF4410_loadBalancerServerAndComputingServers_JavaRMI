@@ -1,0 +1,6 @@
+prime 108350
+fib 32
+fib 20
+prime 109410
+prime 107950
+fib 20
