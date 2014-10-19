@@ -63,10 +63,17 @@ public class ServerRepartiteur {
 	}
 
 	private Hashtable<String, ServerCalculInterface> ServerDispos;
+
+	public synchronized Hashtable<String, ServerCalculInterface> getServerDispos() {
+		return ServerDispos;
+	}
+
 	private enum functions {
 		listServers, compute, unbind
 	};
+
 	private Random rand = new Random();
+	private Thread updateServerListThread;
 
 	public ServerRepartiteur() {
 		super();
@@ -76,6 +83,20 @@ public class ServerRepartiteur {
 
 		this.ServerDispos = new Hashtable<String, ServerCalculInterface>();
 		refreshServerList();
+
+		this.updateServerListThread = new Thread() {
+			public void run() {
+				while (!this.isInterrupted()) {
+					try {
+						sleep(1000);
+					} catch (InterruptedException e) {
+						this.interrupt();
+					}
+					refreshServerList();
+				}
+			}
+		};
+		this.updateServerListThread.start();
 	}
 
 	private void compute(String path) {
@@ -91,8 +112,8 @@ public class ServerRepartiteur {
 		// On va effectuer les tâches...
 		ExecutorService executorService = Executors.newFixedThreadPool(10);
 		ArrayList<Future<Tache>> FutureRetoursDesServeurs = new ArrayList<Future<Tache>>();
-
-		if (!ServerDispos.isEmpty()) {
+		
+		if (!getServerDispos().isEmpty()) {
 			// On va envoyer nos Taches !
 
 			for (int i = 0; i < work.Taches.size(); i++) {
@@ -102,10 +123,10 @@ public class ServerRepartiteur {
 				task.setAssignedTo(randomServerName);
 
 				FutureRetoursDesServeurs.add(executorService
-						.submit(new ComputeCallable(ServerDispos
+						.submit(new ComputeCallable(getServerDispos()
 								.get(randomServerName), task)));
 			}
-			
+
 			while (!FutureRetoursDesServeurs.isEmpty()) {
 				ArrayList<Future<Tache>> FutureRetoursDesServeurs2 = new ArrayList<Future<Tache>>();
 				FutureRetoursDesServeurs2.addAll(FutureRetoursDesServeurs);
@@ -113,37 +134,46 @@ public class ServerRepartiteur {
 					if (future.isDone()) {
 						FutureRetoursDesServeurs.remove(future);
 						try {
-							
+
 							Tache futureTask = future.get();
-							
+
 							if (futureTask.getResultat() == null) {
 								refreshServerList();
 								String randomServerName = getRandomServerName();
 								futureTask.setToInProgressState();
 								futureTask.setAssignedTo(randomServerName);
-								FutureRetoursDesServeurs.add(executorService.submit(new ComputeCallable(
-										ServerDispos.get(randomServerName), futureTask
-								)));
+								FutureRetoursDesServeurs.add(executorService
+										.submit(new ComputeCallable(
+												getServerDispos()
+														.get(randomServerName),
+												futureTask)));
 							} else {
-								System.out.println(futureTask.getAssignedTo()+" a dit : "+futureTask.getResultat());
-								work.addToComputedResult(futureTask.getResultat());
+								System.out.println(futureTask.getAssignedTo()
+										+ " a dit : "
+										+ futureTask.getResultat());
+								work.addToComputedResult(futureTask
+										.getResultat());
 							}
-						} catch (InterruptedException e) { e.printStackTrace(); }
-						  catch (ExecutionException e) { e.printStackTrace(); }
+						} catch (InterruptedException e) {
+							e.printStackTrace();
+						} catch (ExecutionException e) {
+							e.printStackTrace();
+						}
 					}
 
 				}
 			}
-			
+
 		} else {
 			System.out.println("On avisera plus tard");
 		}
 		executorService.shutdown();
+		this.updateServerListThread.interrupt();
 		System.out.println("Résultat calculé : " + work.computedResult);
 		System.out.println("Résultat attendu : " + work.expectedResult);
 	}
 
-	private String getRandomServerName() {
+	private synchronized String getRandomServerName() {
 		int aupif = this.rand.nextInt(ServerDispos.size());
 		Set<String> set = ServerDispos.keySet();
 		String serverName = null;
@@ -151,10 +181,10 @@ public class ServerRepartiteur {
 		for (int j = 0; j <= aupif; j++) {
 			serverName = serverNames.next();
 		}
-		return serverName ;
+		return serverName;
 	}
 
-	private void listServers() {
+	private synchronized void listServers() {
 		// refreshServerList();
 		if (!ServerDispos.isEmpty()) {
 			int i = 1;
@@ -174,12 +204,13 @@ public class ServerRepartiteur {
 				i++;
 			}
 		} else {
-			System.out.println("Aucuns Serveurs n'est pour l'instant enregistré dans le RMI.");
+			System.out
+					.println("Aucuns Serveurs n'est pour l'instant enregistré dans le RMI.");
 		}
 
 	}
 
-	private void refreshServerList() {
+	private synchronized void refreshServerList() {
 		System.out
 				.println("-------------------- MAJ Server List     --------------------");
 		this.ServerDispos = new Hashtable<String, ServerCalculInterface>();
