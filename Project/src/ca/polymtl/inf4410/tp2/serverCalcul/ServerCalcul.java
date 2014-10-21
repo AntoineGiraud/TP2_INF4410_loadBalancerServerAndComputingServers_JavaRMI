@@ -28,7 +28,7 @@ public class ServerCalcul implements ServerCalculInterface {
 		Runtime.getRuntime().addShutdownHook(new Thread() {
 		    public void run() {
 		    	try {
-		    		Registry registry = LocateRegistry.getRegistry("127.0.0.1", 5000);
+		    		Registry registry = LocateRegistry.getRegistry(server.ipServerRMI, server.portServerRMI);
 					registry.unbind("serverCalcul"+server.portEcouteStubRMI);
 				} catch (AccessException e) { e.printStackTrace(); }
 		    	  catch (RemoteException e) { e.printStackTrace(); }
@@ -40,7 +40,9 @@ public class ServerCalcul implements ServerCalculInterface {
 	
 	private boolean malicious;
 	protected int portEcouteStubRMI,
-				quantiteRessources;
+				  quantiteRessources,
+				  portServerRMI = 5000;
+	protected String ipServerRMI = "127.0.0.1";
 	
 	public ServerCalcul() {
 		super();
@@ -63,7 +65,7 @@ public class ServerCalcul implements ServerCalculInterface {
 			ServerCalculInterface stub = (ServerCalculInterface) UnicastRemoteObject
 					.exportObject(this, this.portEcouteStubRMI);
 
-			Registry registry = LocateRegistry.getRegistry("127.0.0.1", 5000);
+			Registry registry = LocateRegistry.getRegistry(this.ipServerRMI, this.portServerRMI);
 			registry.rebind("serverCalcul"+portEcouteStubRMI, stub);
 			System.out.println("ServerCalcul ready.");
 		} catch (ConnectException e) {
@@ -94,6 +96,9 @@ public class ServerCalcul implements ServerCalculInterface {
         	this.portEcouteStubRMI = 0;
         	this.quantiteRessources = 5;
         	this.malicious = false;
+        	this.ipServerRMI = "127.0.0.1";
+        	this.portServerRMI = 5000;
+        	
         } catch (IOException e1) { e1.printStackTrace();}}
         else{
 	        FileInputStream fileInputStream = null;
@@ -108,10 +113,14 @@ public class ServerCalcul implements ServerCalculInterface {
 	        	this.portEcouteStubRMI = properties.getProperty("portEcouteStubRMI") == null ? 0 : Integer.valueOf(properties.getProperty("portEcouteStubRMI"));
 	        	this.quantiteRessources = properties.getProperty("quantiteRessources") == null ? 5 : Integer.valueOf(properties.getProperty("quantiteRessources"));
 	        	this.malicious = properties.getProperty("malicious") == null ? false : Boolean.valueOf(properties.getProperty("malicious"));
+	        	this.portServerRMI = properties.getProperty("portServerRMI") == null ? 5000 : Integer.valueOf(properties.getProperty("portServerRMI"));
+	        	this.ipServerRMI = properties.getProperty("ipServerRMI") == null ? "127.0.0.1" : properties.getProperty("ipServerRMI");
 	        }else{
 	        	this.portEcouteStubRMI = 0;
 	        	this.quantiteRessources = 5;
 	        	this.malicious = false;
+	        	this.ipServerRMI = "127.0.0.1";
+	        	this.portServerRMI = 5000;
 	        }
         }
 	}
@@ -124,6 +133,8 @@ public class ServerCalcul implements ServerCalculInterface {
         properties.setProperty("portEcouteStubRMI", Integer.toString(this.portEcouteStubRMI));
         properties.setProperty("quantiteRessources", Integer.toString(this.quantiteRessources));
         properties.setProperty("malicious", Boolean.toString(this.malicious));
+        properties.setProperty("ipServerRMI", this.ipServerRMI);
+        properties.setProperty("portServerRMI", Integer.toString(this.portServerRMI));
 
         //Store in the properties file
         File f = new File("ServerCalcul.properties");
