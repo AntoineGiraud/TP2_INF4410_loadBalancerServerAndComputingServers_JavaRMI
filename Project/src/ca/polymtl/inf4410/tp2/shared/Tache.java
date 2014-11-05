@@ -8,14 +8,27 @@ public class Tache implements Serializable {
 	private String assignedTo = null; // Nom serveur auquel a été assigné la tache. null si personne
 	private String state;
 	private Integer resultat = null;
+	private int ID;
 	
 	public Tache() {
 		this.Operations = new ArrayList<Operation>();
 		this.setToToDoState();
+		this.ID = 0;
+	}
+	public Tache(int ID) {
+		this.Operations = new ArrayList<Operation>();
+		this.setToToDoState();
+		this.ID = ID;
 	}
 	public Tache(ArrayList<Operation> Operations) {
 		this.Operations = Operations;
 		this.setToToDoState();
+		this.ID = 0;
+	}
+	public Tache(ArrayList<Operation> Operations, int ID) {
+		this.Operations = Operations;
+		this.setToToDoState();
+		this.ID = ID;
 	}
 	public void add(Operation Op) {
 		this.Operations.add(Op);
@@ -50,4 +63,10 @@ public class Tache implements Serializable {
 	// resultat Getters & Setters
 	public Integer getResultat() { return this.resultat; }
 	public void setResultat(Integer resultat) { this.resultat = resultat; }
+	public int getID() {
+		return ID;
+	}
+	public void setID(int iD) {
+		ID = iD;
+	}
 }

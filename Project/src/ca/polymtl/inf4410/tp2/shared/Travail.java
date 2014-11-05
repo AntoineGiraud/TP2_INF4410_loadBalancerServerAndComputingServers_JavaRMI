@@ -34,7 +34,6 @@ public class Travail {
 		this.expectedResult = getExpectedResult(path);
 		this.tacheOperationsLoad = 2;
 		
-		
 		Taches = new ArrayList<Tache>();
 		cutWorkInTasks(); // On va découper notre travail en taches
 	}
@@ -44,7 +43,7 @@ public class Travail {
 		for (Operation operation : Operations) {
 			curOperationsFlow.add(operation);
 			if (curOperationsFlow.size() == this.tacheOperationsLoad) { // On passe à la tache suivante
-				this.Taches.add(new Tache(curOperationsFlow));
+				this.Taches.add(new Tache(curOperationsFlow,this.Taches.size()));
 				curOperationsFlow = new ArrayList<Operation>();
 			}
 		}

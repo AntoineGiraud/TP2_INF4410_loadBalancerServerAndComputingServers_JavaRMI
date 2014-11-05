@@ -25,7 +25,6 @@ public class ComputeCallable implements Callable<Tache> {
 			task.setResultat(null);
 			return task;
 		}
-		System.out.println(retour);
 		return retour;
 	}
 	
