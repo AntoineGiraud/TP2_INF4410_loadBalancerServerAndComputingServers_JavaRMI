@@ -100,12 +100,8 @@ public class ServerRepartiteur {
 	}
 
 	private void compute(String path) {
-		
-		File file = new File(path);
-		if (!file.exists()) {
-			System.out.println("Erreur, le fichier n'existe pas");
-			System.exit(0);
-		}
+		// On vérifie que le fichier passé en paramètre existe sinon on arrête le programme.
+		if (!(new File(path).exists())) { System.out.println("Erreur, le fichier n'existe pas"); System.exit(0); }
 
 		Travail work = new Travail(path); // On a découpé notre projet en taches
 		work.show();
@@ -122,6 +118,7 @@ public class ServerRepartiteur {
 				Tache task = work.Taches.get(i);
 				task.setToInProgressState();
 				task.setAssignedTo(randomServerName);
+				work.Taches.set(i,task);
 
 				FutureRetoursDesServeurs.add(executorService
 						.submit(new ComputeCallable(getServerDispos()
@@ -135,17 +132,15 @@ public class ServerRepartiteur {
 					if (future.isDone()) {
 						FutureRetoursDesServeurs.remove(future);
 						try {
-
 							Tache futureTask = future.get();
 
 							if (futureTask.getResultat() == null) {
-								if (futureTask.getState().equals("Refused")) {
+								if (futureTask.getState().equals("Refused"))
 									System.out.println("Tâche #"+futureTask.getID()+" refusée par "+futureTask.getAssignedTo());
-								}else if (futureTask.getState().equals("NotDelivered")){
+								else if (futureTask.getState().equals("NotDelivered"))
 									System.out.println("Tâche #"+futureTask.getID()+" n'a pas atteint "+futureTask.getAssignedTo());
-								}else{
+								else
 									System.out.println("Tâche #"+futureTask.getID()+" non exécutée pour raison inconnue.");
-								}
 								
 								refreshServerList();
 								String randomServerName = getRandomServerName();
@@ -168,14 +163,10 @@ public class ServerRepartiteur {
 								System.out.println(futureTask.getAssignedTo()
 										+ " réponds pour la tâche #"+futureTask.getID()+ " : " 
 										+ futureTask.getResultat());
-								work.addToComputedResult(futureTask
-										.getResultat());
+								work.submitCompletedTask(futureTask);
 							}
-						} catch (InterruptedException e) {
-							e.printStackTrace();
-						} catch (ExecutionException e) {
-							e.printStackTrace();
-						}
+						} catch (InterruptedException e) { e.printStackTrace(); }
+						  catch (ExecutionException e) { e.printStackTrace(); }
 					}
 
 				}

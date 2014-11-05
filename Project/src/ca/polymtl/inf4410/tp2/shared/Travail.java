@@ -52,7 +52,12 @@ public class Travail {
 			curOperationsFlow = new ArrayList<Operation>();
 		}
 	}
-
+	/**
+	 * <p>Fonction qui va récupérer dans le nom du fichier le résultat attendu des opérations qu'il contient.<br>
+	 * Exemple : donnees-4172.txt => le résultat attendu est 4172</p>
+	 * @param path String chemin vers le fichier
+	 * @return int résultat attendu par le calcul des opérations du fichier
+	 */
 	private static int getExpectedResult(String path){
 		int retour = 0;
 		File file = new File(path);
@@ -62,6 +67,15 @@ public class Travail {
 		}
 		return retour;
 	}
+	/**
+	 * <p>Fonction pour récupérer les opérations d'un fichier donné<br>
+	 * Chaque ligne du fichier texte d'entrée respecte le format: opération opérande<br>
+	 * Exemple pour donnees-4172.txt :
+	 * <ul><li>prime 208358</li><li>fib 32</li><li>fib 44</li></ul>
+	 * </p>
+	 * @param path String chemin vers le fichier
+	 * @return ArrayList<Operation> liste des opérations que contient le fichier.
+	 */
 	private static ArrayList<Operation> getOperationsFromFile(String path) {
 		ArrayList<Operation> Ops = new ArrayList<Operation>();
 		
@@ -100,8 +114,19 @@ public class Travail {
 			tache.show();
 		}
 	}
-
-	public void addToComputedResult(Integer resultat) {
+	/**
+	 * On va mettre à jour la tâche que nous a retourné le serveur de calcul
+	 * @param task
+	 */
+	public synchronized void submitCompletedTask(Tache task) {
+		this.Taches.set(task.getID(), task);
+		this.addToComputedResult(task.getResultat());
+	}
+	/**
+	 * Ajouter le résultat d'une tâche retournée au résultat final
+	 * @param resultat
+	 */
+	public synchronized void addToComputedResult(Integer resultat) {
 		this.computedResult = (this.computedResult + resultat % 5000 ) % 5000;
 	}
 }
