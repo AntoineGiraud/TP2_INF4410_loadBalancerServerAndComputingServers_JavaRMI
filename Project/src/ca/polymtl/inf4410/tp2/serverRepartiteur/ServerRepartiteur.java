@@ -139,6 +139,14 @@ public class ServerRepartiteur {
 							Tache futureTask = future.get();
 
 							if (futureTask.getResultat() == null) {
+								if (futureTask.getState().equals("Refused")) {
+									System.out.println("Tâche #"+futureTask.getID()+" refusée par "+futureTask.getAssignedTo());
+								}else if (futureTask.getState().equals("NotDelivered")){
+									System.out.println("Tâche #"+futureTask.getID()+" n'a pas atteint "+futureTask.getAssignedTo());
+								}else{
+									System.out.println("Tâche #"+futureTask.getID()+" non exécutée pour raison inconnue.");
+								}
+								
 								refreshServerList();
 								String randomServerName = getRandomServerName();
 								if (randomServerName.isEmpty()) { // On n'a plus de serveurs connectés !!

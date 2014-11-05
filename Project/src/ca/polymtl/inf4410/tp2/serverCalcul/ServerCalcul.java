@@ -79,8 +79,16 @@ public class ServerCalcul implements ServerCalculInterface {
 
 	@Override
 	public Tache compute(Tache task) throws RemoteException {
-		System.out.println("Demande de Compute pour "+task.getAssignedTo());
-		task.compute();
+		double T = (double)(task.getNbOperations()-quantiteRessources)/(9*quantiteRessources);
+		double rand = Math.random();
+		if (T <= 0 || rand > T) {
+			System.out.println("Acceptation tâche "+task.getID()+" -- taux de refus: "+(double)(((double)Math.round(T*100))/100));
+			task.compute();
+		}else{
+			System.out.println("Refus       tâche "+task.getID()+" -- taux de refus: "+(double)(((double)Math.round(T*100))/100));
+			task.setResultat(null);
+			task.setToRefusedState();
+		}
 		return task;
 	}
 	

@@ -32,7 +32,7 @@ public class Travail {
 	public Travail(String path) {
 		this.Operations = getOperationsFromFile(path);
 		this.expectedResult = getExpectedResult(path);
-		this.tacheOperationsLoad = 2;
+		this.tacheOperationsLoad = 15;
 		
 		Taches = new ArrayList<Tache>();
 		cutWorkInTasks(); // On va découper notre travail en taches
@@ -48,7 +48,7 @@ public class Travail {
 			}
 		}
 		if (!curOperationsFlow.isEmpty()) {
-			this.Taches.add(new Tache(curOperationsFlow));
+			this.Taches.add(new Tache(curOperationsFlow,this.Taches.size()));
 			curOperationsFlow = new ArrayList<Operation>();
 		}
 	}
@@ -95,11 +95,9 @@ public class Travail {
 	}
 	public void showTaches() {
 		System.out.println("nous avons un travail de "+Operations.size()+" réparti en "+Taches.size()+" taches : ");
-		int i = 1;
 		for (Tache tache : Taches) {
-			System.out.print("Tache #"+i+" : ");
+			System.out.print("Tache #"+tache.getID()+" : ");
 			tache.show();
-			i++;
 		}
 	}
 

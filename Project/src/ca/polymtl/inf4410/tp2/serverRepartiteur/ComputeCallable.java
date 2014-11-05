@@ -23,6 +23,7 @@ public class ComputeCallable implements Callable<Tache> {
 			retour = stub.compute(task);
 		} catch (RemoteException e) {
 			task.setResultat(null);
+			task.setToToDoState();
 			return task;
 		}
 		return retour;

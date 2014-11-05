@@ -54,6 +54,8 @@ public class Tache implements Serializable {
 	}
 	// State Getters & Setters
 	public String getState(){ return this.state; }
+	public void setToRefusedState(){ this.state = "Refused"; }
+	public void setToNotDeliveredState(){ this.state = "NotDelivered"; }
 	public void setToToDoState(){ this.state = "ToDo"; }
 	public void setToFinishedState(){ this.state = "finished"; } 
 	public void setToInProgressState(){ this.state = "inProgress"; }
@@ -63,10 +65,9 @@ public class Tache implements Serializable {
 	// resultat Getters & Setters
 	public Integer getResultat() { return this.resultat; }
 	public void setResultat(Integer resultat) { this.resultat = resultat; }
-	public int getID() {
-		return ID;
-	}
-	public void setID(int iD) {
-		ID = iD;
-	}
+	// getter pou le nombre d'opérations de la tache
+	public int getNbOperations(){return (Operations != null && !Operations.isEmpty())?Operations.size():0;}
+	// ID Getters & Setters
+	public int getID() {return ID;}
+	public void setID(int iD) {ID = iD;}
 }
