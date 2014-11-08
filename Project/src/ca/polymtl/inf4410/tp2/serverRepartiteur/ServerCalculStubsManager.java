@@ -18,23 +18,22 @@ public class ServerCalculStubsManager {
 	private Hashtable<String, ServerCalculInterface> ServerDispos = null;
 	private Random rand = new Random();
 	private Thread updateServerListThread;
+	private String[] rmiRegistryIpsToCheck;
 
-	public ServerCalculStubsManager() {
+	public ServerCalculStubsManager(String[] rmiRegistryIpsToCheck) {
 		if (System.getSecurityManager() == null) {
 			System.setSecurityManager(new SecurityManager());
 		}
 		
 		this.ServerDispos = new Hashtable<String, ServerCalculInterface>();
+		this.rmiRegistryIpsToCheck = (rmiRegistryIpsToCheck != null && rmiRegistryIpsToCheck.length != 0)?rmiRegistryIpsToCheck:new String[]{"127.0.0.1"};
 		refreshServerList();
 		
 		this.updateServerListThread = new Thread() {
 			public void run() {
 				while (!this.isInterrupted()) {
-					try {
-						sleep(2000);
-					} catch (InterruptedException e) {
-						this.interrupt();
-					}
+					try { sleep(2000);}
+					catch (InterruptedException e) { this.interrupt(); }
 					refreshServerList();
 				}
 			}
@@ -58,50 +57,56 @@ public class ServerCalculStubsManager {
 		oldServeurs.putAll(this.ServerDispos);
 		String addedAndRemovedServers = "";
 		this.ServerDispos = new Hashtable<String, ServerCalculInterface>();
-		String[] listeServeurs = null;
-		Registry registry = null;
 
-		try {
-			registry = LocateRegistry.getRegistry("127.0.0.1", 5000);
-			listeServeurs = registry.list();
-		} catch (RemoteException e) { System.out.println("Erreur de connexion au Registre RMI : "+ e.getMessage()); }
-
-		if (listeServeurs.length > 0 && registry != null) {
-			for (String serverName : listeServeurs) {
-				ServerCalculInterface stub = null;
-				try {
-					stub = (ServerCalculInterface) registry.lookup(serverName);
-				} catch (AccessException e) { System.out.println("AccessException"); }
-				  catch (RemoteException e) { System.out.println("RemoteException"); }
-				  catch (NotBoundException e){System.out.println("NotBoundException");}
-				try {
-					if (stub != null && stub.ping()) {
-						ServerDispos.put(serverName, stub);
-						if (!oldServeurs.containsKey(serverName))
-							addedAndRemovedServers += "+"+serverName + ", ";
-					} else { // Je ne devrais jamais arriver ici, il sertait tombé dans le Catch
-						System.out.print(serverName + " non joignable. ");
-						unbind(serverName); // On le retire de la liste du RMI car on a pas réussi à le joindre.
+		for (String RmiIp : rmiRegistryIpsToCheck) {
+			try {
+				Registry registry = LocateRegistry.getRegistry(RmiIp, 5000);
+				String[] listeServeurs = registry.list();
+				if (listeServeurs.length > 0 && registry != null) {
+					for (String serverName : listeServeurs) {
+						ServerCalculInterface stub = null;
+						try {
+							stub = (ServerCalculInterface) registry.lookup(serverName);
+						} catch (AccessException e) { System.out.println("AccessException for" + serverName);}
+						  catch (RemoteException e) { System.out.println("RemoteException for" + serverName);}
+						  catch (NotBoundException e){System.out.println("NotBoundException for"+serverName);}
+						try {
+							if (stub != null && stub.ping()) {
+								if (ServerDispos.containsKey(serverName))
+									System.out.println("Attention, un "+serverName+" est déjà déclaré dans la liste des serveurs");
+								else{
+									ServerDispos.put(serverName, stub);
+									if (!oldServeurs.containsKey(serverName))
+										addedAndRemovedServers += "+"+serverName + ", ";
+								}
+							} else { // Je ne devrais jamais arriver ici, il sertait tombé dans le Catch
+								System.out.println(serverName + " non joignable dans le RMI à l'IP "+RmiIp);
+								if (RmiIp == "127.0.0.1")
+									unbind(serverName, registry); // On le retire de la liste du RMI car on a pas réussi à le joindre.
+							}
+						} catch (RemoteException e1) {
+							System.out.println(serverName + " non joignable dans le RMI à l'IP "+RmiIp);
+							if (RmiIp == "127.0.0.1")
+								unbind(serverName, registry); // On le retire de la liste du RMI car on a pas réussi à le joindre.
+						}
 					}
-				} catch (RemoteException e1) {
-					System.out.print(serverName + " non joignable. ");
-					unbind(serverName); // On le retire de la liste du RMI car on a pas réussi à le joindre.
 				}
-			}
-			if (!oldServeurs.isEmpty()) { // On trouve les serveurs qui ont été coupés
-				// On récupère les clés de notre Hashtable, id est les serverNames
-				Set<String> set = oldServeurs.keySet();
-				String serverName;
-				Iterator<String> serverNames = set.iterator();
-				while (serverNames.hasNext()) {
-					serverName = serverNames.next();
-					if (!ServerDispos.containsKey(serverName))
-						addedAndRemovedServers += "-"+serverName + ", ";
-				}
-			}
-			if (!addedAndRemovedServers.isEmpty())
-				System.out.println("## MAJ Liste servers : " + addedAndRemovedServers.substring(0, (addedAndRemovedServers.length() >= 2) ? addedAndRemovedServers.length() - 2 : 0) );
+			} catch (RemoteException e) { System.out.println("Erreur de connexion au Registre RMI : "+RmiIp+" \n "+e.getMessage()); }
 		}
+		
+		if (!oldServeurs.isEmpty()) { // On trouve les serveurs qui ont été coupés
+			// On récupère les clés de notre Hashtable, id est les serverNames
+			Set<String> set = oldServeurs.keySet();
+			String serverName;
+			Iterator<String> serverNames = set.iterator();
+			while (serverNames.hasNext()) {
+				serverName = serverNames.next();
+				if (!ServerDispos.containsKey(serverName))
+					addedAndRemovedServers += "-"+serverName + ", ";
+			}
+		}
+		if (!addedAndRemovedServers.isEmpty())
+			System.out.println("## MAJ Liste servers : " + addedAndRemovedServers.substring(0, (addedAndRemovedServers.length() >= 2) ? addedAndRemovedServers.length() - 2 : 0) );
 	}
 	
 	/**
@@ -130,9 +135,8 @@ public class ServerCalculStubsManager {
 	 * Cette fonction a été utilie au tout début du projet.
 	 * @param serverNameToUnbind String, nom du serveur à retirer du RMI.
 	 */
-	public void unbind(String serverNameToUnbind) {
+	public void unbind(String serverNameToUnbind, Registry registry ) {
 		try {
-			Registry registry = LocateRegistry.getRegistry("127.0.0.1", 5000);
 			String[] listeServeurs = registry.list();
 			if (listeServeurs.length > 0)
 				for (String serverName : listeServeurs)
