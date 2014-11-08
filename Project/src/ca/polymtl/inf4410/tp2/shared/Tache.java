@@ -9,6 +9,8 @@ public class Tache implements Serializable {
 	private String state;
 	private Integer resultat = null;
 	private int ID;
+	private int parent_ID = 0;
+	private int nbEssaieRealisation = 0;
 	
 	public Tache() {
 		this.Operations = new ArrayList<Operation>();
@@ -44,7 +46,25 @@ public class Tache implements Serializable {
 		this.setToFinishedState();
 	}
 	
-	// Petite fonction pour voir rapidement le contenu de la tache
+	/**
+	 * Fonction qui va séparer cette tâche en deux. <br>
+	 * Cette tâche va perdre la moitié de ses opérations et l'autre moitié sera retourné dans une nouvelle tâche.
+	 * @return Tache deuxième moitié de cette tâche qui vient d'être coupée en deux.
+	 */
+	public Tache cutInTwo() {
+		// Si on a une tâche de moins de une opération on ne peut la couper en deux.
+		if (this.Operations.size() <= 1) throw new ArrayIndexOutOfBoundsException("La taille de la tache ne peut être divisée (<=1)");
+		int firsthalf = Math.round(this.Operations.size() / 2); // 1.5 sera 2 => première partie tjs plus grande que la seconde.
+		ArrayList<Operation> Opperations2eTache = new ArrayList<Operation>();
+		for (int i = firsthalf; i < this.Operations.size(); i++) {
+			Opperations2eTache.add(this.Operations.get(firsthalf));
+			this.Operations.remove(firsthalf);
+		}
+		Tache deuxiemeMoitie = new Tache(Opperations2eTache);
+		return deuxiemeMoitie;
+	}
+	
+	/** Petite fonction pour voir rapidement le contenu de la tache */
 	public void show() {
 		System.out.print(this.Operations.size()+" Opérations à effectuer : ");
 		for (Operation operation : this.Operations) {
@@ -65,9 +85,12 @@ public class Tache implements Serializable {
 	// resultat Getters & Setters
 	public Integer getResultat() { return this.resultat; }
 	public void setResultat(Integer resultat) { this.resultat = resultat; }
-	// getter pou le nombre d'opérations de la tache
+	/** getter pou le nombre d'opérations de la tache */
 	public int getNbOperations(){return (Operations != null && !Operations.isEmpty())?Operations.size():0;}
 	// ID Getters & Setters
 	public int getID() {return ID;}
 	public void setID(int iD) {ID = iD;}
+	// parent_ID Getters & Setters
+	public int getParent_ID() { return parent_ID;}
+	public void setParent_ID(int parent_ID) { this.parent_ID = parent_ID;}
 }
