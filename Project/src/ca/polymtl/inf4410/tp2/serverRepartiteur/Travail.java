@@ -1,10 +1,18 @@
-package ca.polymtl.inf4410.tp2.shared;
+package ca.polymtl.inf4410.tp2.serverRepartiteur;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Properties;
+
+import ca.polymtl.inf4410.tp2.shared.Operation;
+import ca.polymtl.inf4410.tp2.shared.OperationUnknownException;
+import ca.polymtl.inf4410.tp2.shared.Tache;
 
 public class Travail {
 	public static void main(String[] args) {
@@ -26,13 +34,14 @@ public class Travail {
 	public ArrayList<Operation> Operations;
 	public ArrayList<Tache> Taches;
 	public int expectedResult;
-	private int tacheOperationsLoad;
+	private int tacheOperationsLoad = 10;
 	public int computedResult = 0;
 	
 	public Travail(String path) {
 		this.Operations = getOperationsFromFile(path);
 		this.expectedResult = getExpectedResult(path);
-		this.tacheOperationsLoad = 15;
+		this.readServerPropertiesFromFile();
+		this.writeServerPropertiesInFile();
 		
 		Taches = new ArrayList<Tache>();
 		cutWorkInTasks(); // On va découper notre travail en taches
@@ -129,4 +138,55 @@ public class Travail {
 	public synchronized void addToComputedResult(Integer resultat) {
 		this.computedResult = (this.computedResult + resultat % 5000 ) % 5000;
 	}
+	
+	/**
+	 * <p>Fonction pour lire l'ID que l'on s'est vu attribuer par le serveur<br>
+	 * On utilise la classe {@link Properties} pour nous aider à gérer plus facilement notre fichier de conf...</p>
+	 */
+	private void readServerPropertiesFromFile() {
+		Properties properties = new Properties();
+		File f = new File("Travail.properties");
+        if (!f.exists()) { try { 
+        	f.createNewFile(); // Si le fichier n'existait pas on le créé
+        	this.tacheOperationsLoad = 10;
+        	
+        } catch (IOException e1) { e1.printStackTrace();}}
+        else{
+	        FileInputStream fileInputStream = null;
+	        
+	        //Ouverture & lecture du fichier
+			try {
+				fileInputStream = new FileInputStream(f);
+				properties.load(fileInputStream); // On charge les propriétés stockées dans notre fichier
+				fileInputStream.close();
+			} catch (IOException e) { e.printStackTrace(); }
+	        if (fileInputStream != null) { // Si on a réussi à ouvrir le fichier
+	        	this.tacheOperationsLoad = properties.getProperty("tacheOperationsLoad") == null ? 5 : Integer.valueOf(properties.getProperty("tacheOperationsLoad"));
+	        }else{
+	        	this.tacheOperationsLoad = 10;
+	        }
+        }
+	}
+	/**
+	 * <p>Fonction pour écrire l'ID que l'on s'est vu attribuer par le serveur<br>
+	 * On utilise la classe {@link Properties} pour nous aider à gérer plus facilement notre fichier de conf...</p>
+	 */
+	private void writeServerPropertiesInFile() {
+        Properties properties = new Properties();
+        properties.setProperty("tacheOperationsLoad", Integer.toString(this.tacheOperationsLoad));
+
+        //Store in the properties file
+        File f = new File("Travail.properties");
+        try {
+			FileOutputStream fileOutputStream = new FileOutputStream(f);
+			properties.store(fileOutputStream, null);
+			fileOutputStream.close();
+		} catch (FileNotFoundException e) { e.printStackTrace(); }
+          catch (IOException e) { e.printStackTrace(); }
+	}
+
+	/** @return the tacheOperationsLoad */
+	public int getTacheOperationsLoad() { return tacheOperationsLoad; }
+	/** @param tacheOperationsLoad the tacheOperationsLoad to set */
+	public void setTacheOperationsLoad(int tacheOperationsLoad) { this.tacheOperationsLoad = tacheOperationsLoad;}
 }

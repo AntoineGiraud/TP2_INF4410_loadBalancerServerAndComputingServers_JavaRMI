@@ -15,16 +15,17 @@ public class ComputeCallable implements Callable<Tache> {
 		this.stub = stub;
 		this.task = task;
 	}
-	
+
 	@Override
 	public Tache call() {
 		Tache retour;
 		try {
 			retour = stub.compute(task);
 		} catch (RemoteException e) {
+			// Si on a pas réussi à joindre le serveur, on s'assure que le resultat de la tache est bien à null et qu'elle est à l'état TO-DO
 			task.setResultat(null);
-			task.setToToDoState();
-			return task;
+			task.setToToDoState(); // Le répartiteur comprendra que le serveur n'a pas été joignable. il mettra à jour la liste des serveurs et allouera la tache à un nouveau serveur de calcul disponible.
+			retour = task;
 		}
 		return retour;
 	}
