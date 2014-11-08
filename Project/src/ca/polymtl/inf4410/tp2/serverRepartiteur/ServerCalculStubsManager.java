@@ -39,9 +39,12 @@ public class ServerCalculStubsManager {
 			}
 		};
 	}
-	
+
 	public boolean hasServers() {
 		return !ServerDispos.isEmpty();
+	}
+	public boolean hasServer(String serverName) {
+		return (ServerDispos.containsKey(serverName))?true:false;
 	}
 
 	public ServerCalculInterface get(String serverName) {

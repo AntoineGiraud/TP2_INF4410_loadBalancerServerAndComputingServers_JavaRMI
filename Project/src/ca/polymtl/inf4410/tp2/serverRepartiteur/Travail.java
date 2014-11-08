@@ -27,7 +27,7 @@ public class Travail {
 		System.out.println("Résultat attendu : "+work.expectedResult);
 	}
 	
-	public ArrayList<Operation> Operations;
+	private ArrayList<Operation> Operations;
 	public ArrayList<Tache> Taches;
 	public int expectedResult;
 	private int tacheOperationsLoad = 10;

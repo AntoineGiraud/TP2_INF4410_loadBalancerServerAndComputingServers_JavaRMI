@@ -11,7 +11,6 @@ public class Tache implements Serializable {
 	private Integer resultat = null;
 	private int ID;
 	private int parent_ID = 0;
-	private int nbEssaieRealisation = 0;
 	
 	public Tache() {
 		this.Operations = new ArrayList<Operation>();
