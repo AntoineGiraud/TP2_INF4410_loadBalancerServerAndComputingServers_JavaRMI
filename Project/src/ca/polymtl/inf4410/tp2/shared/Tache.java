@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 
 public class Tache implements Serializable {
+	private static final long serialVersionUID = 205388607212530270L;
 	private ArrayList<Operation> Operations;
 	private String assignedTo = null; // Nom serveur auquel a été assigné la tache. null si personne
 	private String state;

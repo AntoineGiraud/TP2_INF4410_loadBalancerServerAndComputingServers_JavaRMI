@@ -4,6 +4,7 @@ import java.io.Serializable;
 
 
 public class Operation implements Serializable {
+	private static final long serialVersionUID = -5919711688941361027L;
 	public String name;
 	public int value;
 	

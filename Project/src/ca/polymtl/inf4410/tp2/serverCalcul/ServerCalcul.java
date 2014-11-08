@@ -5,6 +5,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.net.InetAddress;
 import java.rmi.*;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
@@ -42,7 +43,7 @@ public class ServerCalcul implements ServerCalculInterface {
 	protected int portEcouteStubRMI,
 				  quantiteRessources,
 				  portServerRMI = 5000;
-	protected String ipServerRMI = "127.0.0.1";
+	protected String ipServerRMI = "127.0.0.1", thisServerIp = "127.0.0.1";
 	
 	public ServerCalcul() {
 		super();
@@ -51,6 +52,7 @@ public class ServerCalcul implements ServerCalculInterface {
 		if (this.portEcouteStubRMI < 5000 || this.portEcouteStubRMI > 5050) {
 			System.out.println("Attention à prendre un numero de port compris entre 5000 et 5050 pour pouvoir être éxécuté dans la salle de TP.");
 		}
+		System.setProperty("java.rmi.server.hostname", thisServerIp);
 	}
     
 	/**
@@ -67,7 +69,7 @@ public class ServerCalcul implements ServerCalculInterface {
 
 			Registry registry = LocateRegistry.getRegistry(this.ipServerRMI, this.portServerRMI);
 			registry.rebind("serverCalcul"+portEcouteStubRMI, stub);
-			System.out.println("ServerCalcul ready.");
+			System.out.println("ServerCalcul ready at "+InetAddress.getLocalHost().getHostAddress());
 		} catch (ConnectException e) {
 			System.err.println("Impossible de se connecter au registre RMI. Est-ce que rmiregistry est lancé ?");
 			System.err.println();
@@ -105,6 +107,7 @@ public class ServerCalcul implements ServerCalculInterface {
         	this.quantiteRessources = 5;
         	this.malicious = false;
         	this.ipServerRMI = "127.0.0.1";
+        	this.thisServerIp = "127.0.0.1";
         	this.portServerRMI = 5000;
         	
         } catch (IOException e1) { e1.printStackTrace();}}
@@ -123,11 +126,13 @@ public class ServerCalcul implements ServerCalculInterface {
 	        	this.malicious = properties.getProperty("malicious") == null ? false : Boolean.valueOf(properties.getProperty("malicious"));
 	        	this.portServerRMI = properties.getProperty("portServerRMI") == null ? 5000 : Integer.valueOf(properties.getProperty("portServerRMI"));
 	        	this.ipServerRMI = properties.getProperty("ipServerRMI") == null ? "127.0.0.1" : properties.getProperty("ipServerRMI");
+	        	this.thisServerIp = properties.getProperty("thisServerIp") == null ? "127.0.0.1" : properties.getProperty("thisServerIp");
 	        }else{
 	        	this.portEcouteStubRMI = 0;
 	        	this.quantiteRessources = 5;
 	        	this.malicious = false;
 	        	this.ipServerRMI = "127.0.0.1";
+	        	this.thisServerIp = "127.0.0.1";
 	        	this.portServerRMI = 5000;
 	        }
         }
@@ -142,6 +147,7 @@ public class ServerCalcul implements ServerCalculInterface {
         properties.setProperty("quantiteRessources", Integer.toString(this.quantiteRessources));
         properties.setProperty("malicious", Boolean.toString(this.malicious));
         properties.setProperty("ipServerRMI", this.ipServerRMI);
+        properties.setProperty("thisServerIp", this.thisServerIp);
         properties.setProperty("portServerRMI", Integer.toString(this.portServerRMI));
 
         //Store in the properties file
