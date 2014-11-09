@@ -108,7 +108,7 @@ public class Travail {
         return Ops;
 	}
 	public void show() {
-		System.out.println("Nous avons extrait "+this.Operations.size()+" Opérations à effectuer depuis le fichier passé.");
+		System.out.println(this.Operations.size()+" Opérations extraites du fichier. "+tacheOperationsLoad+" tâches ont été crées");
 		System.out.println("Résultat attendu : "+this.expectedResult);
 	}
 	public void showTaches() {
@@ -120,11 +120,18 @@ public class Travail {
 	}
 	/**
 	 * On va mettre à jour la tâche que nous a retourné le serveur de calcul
-	 * @param task
+	 * @param task Tache
 	 */
 	public synchronized void submitCompletedTask(Tache task) {
 		this.Taches.set(task.getID(), task);
 		this.addToComputedResult(task.getResultat());
+	}
+	/**
+	 * On va mettre à jour la tâche d'ID task.ID
+	 * @param task Tache
+	 */
+	public synchronized void updateTask(Tache task) {
+		this.Taches.set(task.getID(), task);
 	}
 	/**
 	 * Ajouter le résultat d'une tâche retournée au résultat final

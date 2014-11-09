@@ -11,6 +11,7 @@ public class Tache implements Serializable {
 	private Integer resultat = null;
 	private int ID;
 	private int parent_ID = 0;
+	private int child_ID = 0;
 	
 	public Tache() {
 		this.Operations = new ArrayList<Operation>();
@@ -93,4 +94,7 @@ public class Tache implements Serializable {
 	// parent_ID Getters & Setters
 	public int getParent_ID() { return parent_ID;}
 	public void setParent_ID(int parent_ID) { this.parent_ID = parent_ID;}
+	// child_ID Getters & Setters
+	public int getChild_ID() { return child_ID;}
+	public void setChild_ID(int child_ID) { this.child_ID = child_ID;}
 }

@@ -69,7 +69,7 @@ public class ServerCalcul implements ServerCalculInterface {
 
 			Registry registry = LocateRegistry.getRegistry(this.ipServerRMI, this.portServerRMI);
 			registry.rebind("serverCalcul"+portEcouteStubRMI, stub);
-			System.out.println("ServerCalcul ready at "+InetAddress.getLocalHost().getHostAddress());
+			System.out.println("ServerCalcul"+(malicious == true?" malicieux":"")+" ready at "+thisServerIp+":"+portEcouteStubRMI+", quantiteRessources:"+quantiteRessources+", ");
 		} catch (ConnectException e) {
 			System.err.println("Impossible de se connecter au registre RMI. Est-ce que rmiregistry est lancé ?");
 			System.err.println();
