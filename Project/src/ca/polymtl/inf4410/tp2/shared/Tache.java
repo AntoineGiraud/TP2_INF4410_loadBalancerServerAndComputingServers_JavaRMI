@@ -4,7 +4,12 @@ import java.io.Serializable;
 import java.util.ArrayList;
 
 /**
- * 
+ * <p>Cette classe va permettre de faire passer au serveur de calcul de nombreuses informations et vice-versa.<br>
+ * Chaque tache va contenir au minimum une liste d'opérations, la valeur du résultat final, l'état de la tâche, à qui (quel serveur) a-t-elle été attribuée, ...<br>
+ * Nous completerons pour notre utilisation avec des champs pour avoir une relation d'héritage parent enfant entr les tâches.<br>
+ * En effet, il nous est important pour nous au besoin d'adapter la taille des taches en temps réel si elles sont trop grosses pour la capacité d'un serveur.<br>
+ * On divise alors la tâche en deux. Cela fait que nous avons besoin de lier les deux nouvelles tâches entre elles.
+ * </p> 
  * @author Antoine
  *
  */
@@ -19,26 +24,31 @@ public class Tache implements Serializable {
 			child_ID = null;
 	private int ID;
 	
+	/** initialise une tache */
 	public Tache() {
 		this.Operations = new ArrayList<Operation>();
 		this.setToToDoState();
 		this.ID = 0;
 	}
+	/** initialise une tache avec un ID donné */
 	public Tache(int ID) {
 		this.Operations = new ArrayList<Operation>();
 		this.setToToDoState();
 		this.ID = ID;
 	}
+	/** Initialise une tâche avec une liste d'opérations définie */
 	public Tache(ArrayList<Operation> Operations) {
 		this.Operations = Operations;
 		this.setToToDoState();
 		this.ID = 0;
 	}
+	/** Initialise une tâche avec une liste d'opérations définie ainsi qu'un ID défini */
 	public Tache(ArrayList<Operation> Operations, int ID) {
 		this.Operations = Operations;
 		this.setToToDoState();
 		this.ID = ID;
 	}
+	/** dupliquer une tâche */
 	public Tache(Tache tache) {
 		this.Operations = new ArrayList<Operation>(tache.Operations);
 		this.assignedTo = tache.assignedTo;
@@ -49,9 +59,11 @@ public class Tache implements Serializable {
 		this.resultat = tache.resultat;
 		this.state = tache.state;
 	}
+	/** ajouter une opération à la tache */
 	public void add(Operation Op) {
 		this.Operations.add(Op);
 	}
+	/** lancer le calcul des opérations de la tache.<br> cette méthode sera appelé sur les serveurs de calcul. */
 	public void compute() {
 		this.setToInProgressState();
 		this.resultat = 0;

@@ -2,7 +2,6 @@ package ca.polymtl.inf4410.tp2.shared;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;
-import java.util.Properties;
 
 /**
  * <p>Le serveur de calcul va exposer aux serverRepartiteurs les opérations suivantes : 

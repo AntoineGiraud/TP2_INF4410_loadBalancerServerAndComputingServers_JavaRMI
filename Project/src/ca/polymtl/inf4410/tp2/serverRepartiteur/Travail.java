@@ -11,7 +11,8 @@ import ca.polymtl.inf4410.tp2.shared.OperationUnknownException;
 import ca.polymtl.inf4410.tp2.shared.Tache;
 
 /**
- * 
+ * <p>Classe qui va nous permettre de gérer un travail de calcul.<br>
+ * Cette classe va nous servir à extraire les {@link Operation}s du fichier passé en paramètre et les distribuer en {@link Tache}s
  * @author Antoine
  *
  */
@@ -38,6 +39,11 @@ public class Travail {
 	private int tacheOperationsLoad = 10;
 	public int computedResult = 0;
 	
+	/**
+	 * On a besoin de deux paramêtres pour lancer un nouveau travail :
+	 * @param path String le chemin vers le fichier contenant les opérations avec à chaque ligne le format : "Opérande Opération" soit "fib 12345"
+	 * @param tacheOperationsLoad int taille des tâches en opérations.
+	 */
 	public Travail(String path, int tacheOperationsLoad) {
 		this.Operations = getOperationsFromFile(path);
 		this.expectedResult = getExpectedResult(path);
