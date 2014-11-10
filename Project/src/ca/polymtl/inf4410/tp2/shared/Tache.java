@@ -3,6 +3,11 @@ package ca.polymtl.inf4410.tp2.shared;
 import java.io.Serializable;
 import java.util.ArrayList;
 
+/**
+ * 
+ * @author Antoine
+ *
+ */
 public class Tache implements Serializable {
 	private static final long serialVersionUID = 205388607212530270L;
 	private ArrayList<Operation> Operations;

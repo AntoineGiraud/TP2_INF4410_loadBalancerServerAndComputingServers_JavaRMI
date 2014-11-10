@@ -20,7 +20,7 @@ public class ComputeCallable implements Callable<Tache> {
 	public Tache call() {
 		Tache retour;
 		try {
-			retour = stub.compute(task);
+			retour = stub.secureCompute(task);
 		} catch (RemoteException e) {
 			// Si on a pas réussi à joindre le serveur, on s'assure que le resultat de la tache est bien à null et qu'elle est à l'état TO-DO
 			task.setResultat(null);

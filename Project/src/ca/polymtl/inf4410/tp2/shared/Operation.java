@@ -2,7 +2,11 @@ package ca.polymtl.inf4410.tp2.shared;
 
 import java.io.Serializable;
 
-
+/**
+ * 
+ * @author Antoine
+ *
+ */
 public class Operation implements Serializable {
 	private static final long serialVersionUID = -5919711688941361027L;
 	public String name;

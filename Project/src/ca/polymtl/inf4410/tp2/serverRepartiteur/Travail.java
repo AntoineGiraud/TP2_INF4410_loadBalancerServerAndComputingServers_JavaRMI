@@ -10,6 +10,11 @@ import ca.polymtl.inf4410.tp2.shared.Operation;
 import ca.polymtl.inf4410.tp2.shared.OperationUnknownException;
 import ca.polymtl.inf4410.tp2.shared.Tache;
 
+/**
+ * 
+ * @author Antoine
+ *
+ */
 public class Travail {
 	public static void main(String[] args) {
 		Travail work = new Travail("/Documents/School/PolyMtl/Java/TP2_INF4410_1761581/Project/data_files/donnees-2684.txt",10);
@@ -42,6 +47,9 @@ public class Travail {
 		cutWorkInTasks(); // On va découper notre travail en taches
 	}
 	
+	/**
+	 * Diviser le {@link Travail}, les {@link Operation}s récupérées du fichier, en {@link Tache}s.
+	 */
 	private void cutWorkInTasks() {
 		ArrayList<Operation> curOperationsFlow = new ArrayList<Operation>();
 		for (Operation operation : Operations) {
@@ -107,10 +115,12 @@ public class Travail {
     	}
         return Ops;
 	}
+	/** Afficher quelques informations sur le travail en cours */
 	public void show() {
 		System.out.println(this.Operations.size()+" Opérations extraites du fichier. "+this.Taches.size()+" tâches ont été crées");
 		System.out.println("Résultat attendu : "+this.expectedResult);
 	}
+	/** afficher les Opérations récupérées du fichier */
 	public void showTaches() {
 		System.out.println("nous avons un travail de "+Operations.size()+" réparti en "+Taches.size()+" taches : ");
 		for (Tache tache : Taches) {

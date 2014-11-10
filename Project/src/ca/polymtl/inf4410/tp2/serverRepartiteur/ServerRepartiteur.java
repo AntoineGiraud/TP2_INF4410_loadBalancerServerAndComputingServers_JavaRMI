@@ -15,9 +15,23 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
+import ca.polymtl.inf4410.tp2.serverCalcul.ServerCalcul;
 import ca.polymtl.inf4410.tp2.shared.Tache;
 
 /**
+ * <p>
+ * Ceci est la classe du serveur répartiteur.
+ * Nous exposons au client trois commandes :
+ * <ul><li>la liste des serveurs enregistrés aux différents registres RMI connus</li>
+ * <li>secureCompute une fonction qui ve permettre de réaliser le calcul séurisé de tâches passées en paramètre.</li>
+ * <li>nonSecureCompute une fonction qui ve permettre de réaliser le calcul en mode non séurisé de tâches passées en paramètre.</li></ul>
+ * Sont contenus dans cette classe essentielement le code pour faire fonctioner le serveur répartiteur et la logique des commandes exposées à l'utilisateur.</p>
+ * <p>La gestion des serveurs de calculs disponibles et des stubs propre à chacun d'eux est géré par la classe {@link ServerCalculStubsManager}.<br>
+ * Pour les fonctions de calcul des opérations contenus dans les fichiers d'opérations, nous allons utiliser la classe {@link Travail}.<br>
+ * Celle-ci aura extrait les {@link Operation}s du fichier passé en paramètre et les aura distribués en {@link Tache}s</p>
+ * <p>La méthode nonSecureCompute est plus particuliaire car elle mettra à jour la tache de l'object {@link Travail} que lorsqu'elle sera sur que le résultat a été voté par une majorité d'au moins deux {@link ServerCalcul}.</p>
+ * <p>Pour plus d'informations sur les exigences du projet, veuillez vous reporter au sujet du TP et à la FAQ.
+ * </p>
  * @author Antoine Giraud #1761581
  *
  */
@@ -90,7 +104,7 @@ public class ServerRepartiteur {
 
 				futurSrvrRtrn.add(execServ.submit(new ComputeCallable(stubManagr.get(randomServerName), task)));
 			}
-
+			// Tant que l'on a des retours des taches on les traite
 			while (!futurSrvrRtrn.isEmpty()) {
 				ArrayList<Future<Tache>> tamponFuturRetour = new ArrayList<Future<Tache>>(futurSrvrRtrn);
 				for (Future<Tache> future : tamponFuturRetour) {
@@ -414,7 +428,11 @@ public class ServerRepartiteur {
 		System.out.println("Temps écoulé pour le calcul en mode sécurisé : " + (end - start) + " ns");
 	}
 	
-
+	/**
+	 * fonction récursive pour calculer la tâche qui aurait été divisées en morceaux pour pouvoir la traiter à cause de son faible qi et d'un fort partitionement de taches.
+	 * @param task Tache parente
+	 * @return résultat
+	 */
 	private Integer computeServerResult(Tache task) {
 		if (!task.hasStateFinished()) {return null;}
 		if (task.getResultat() == null) {return null;}
@@ -434,6 +452,11 @@ public class ServerRepartiteur {
 		}
 	}
 	
+	/**
+	 * Trouver les serveurs qui ont déjà été utilisé pour traiter la tache #X de l'objet de travail courant.
+	 * @param nonSecureServersResults ArrayList<Tache> Liste des tâches effectuées pour répondre à la tache mère de l'objet de travail courant.
+	 * @return ArrayList<String> Liste des noms des serveurs impliqués pour traiter la tache #X de l'objet de travail courant.
+	 */
 	private ArrayList<String> findServersInvolved(ArrayList<Tache> nonSecureServersResults) {
 		ArrayList<String> serversInvolved = new ArrayList<String>();
 		for (Tache tache : nonSecureServersResults) {
@@ -444,57 +467,12 @@ public class ServerRepartiteur {
 		return serversInvolved;
 	}
 	
-	private void showCountFailRequettesServerArray() {
-		System.out.println("serverName:nbOpérations:count");
-		if (!countFailRequettesServer.isEmpty()) { // On trouve les serveurs qui ont été coupés
-			// On récupère les clés de notre Hashtable
-			Set<String> set = countFailRequettesServer.keySet();
-			String serverName;
-			Iterator<String> serverNames = set.iterator();
-			while (serverNames.hasNext()) {
-				serverName = serverNames.next();
-				Hashtable<Integer, Integer> cur = countFailRequettesServer.get(serverName);
-				if (cur != null && !cur.isEmpty()) { // On trouve les serveurs qui ont été coupés
-					// On récupère les clés de notre Hashtable
-					Set<Integer> set2 = cur.keySet();
-					Integer nbOp;
-					Iterator<Integer> nbOps = set2.iterator();
-					while (nbOps.hasNext()) {
-						nbOp = nbOps.next();
-						System.out.println(serverName+":"+nbOp+":"+countFailRequettesServer.get(serverName).get(nbOp));
-					}
-				}
-			}
-		}
-	}
-	
-	private void showtachesNonSecure() {
-		System.out.println("TacheID.localTaskID ; serverName ; resultat ; state ; parent_ID ; child_ID");
-		if (!tachesNonSecure.isEmpty()) { // On trouve les serveurs qui ont été coupés
-			// On récupère les clés de notre Hashtable
-			Set<Integer> set = tachesNonSecure.keySet();
-			Integer taskID;
-			Iterator<Integer> serverNames = set.iterator();
-			while (serverNames.hasNext()) {
-				taskID = serverNames.next();
-				ArrayList<Tache> cur = tachesNonSecure.get(taskID);
-				if (cur != null && !cur.isEmpty()) { // On trouve les serveurs qui ont été coupés
-					// On récupère les clés de notre Hashtable
-					for (Tache tache : cur) {
-						System.out.println(tache.getNonSecureParent_ID()+"."+tache.getID()+" ; "+tache.getAssignedTo()+" ; "+tache.getResultat()+" ; "+tache.getState()+" ; "+tache.getParent_ID()+" ; "+tache.getChild_ID());
-					}
-				}
-			}
-		}
-	}
-	private void showArrayListContent(ArrayList<String> listString) {
-		System.out.print("showArrayListContent: ");
-		for (String nom : listString) {
-			System.out.print(nom+"; ");
-		}
-		System.out.println();
-	}
-	
+	/**
+	 * Fonction qui va permettre d'incrémenter les compteurs de refus des tâches de la part des serveurs de calcul. <br>
+	 * Hashtable<String, Hashtable<Integer, Integer>> countFailRequettesServer
+	 * @param serverName String
+	 * @param TaskSize Integer
+	 */
 	private void incrementCountFailRequettesServer(String serverName,Integer TaskSize) {
 		if (countFailRequettesServer.containsKey(serverName)) {
 			if (countFailRequettesServer.get(serverName).containsKey(TaskSize)) {
@@ -524,6 +502,66 @@ public class ServerRepartiteur {
 			occ.put(TaskSize, 1);
 			countFailRequettesServer.put(serverName, occ );
 		}
+	}
+	/**
+	 * Simple fonction pour afficher le contenu de la variable Hashtable<String, Hashtable<Integer, Integer>> countFailRequettesServer qui permet de compter les échecs des requettes propre à un serveur et ensuite à une taille de paquet.
+	 */
+	private void showCountFailRequettesServerArray() {
+		System.out.println("serverName:nbOpérations:count");
+		if (!countFailRequettesServer.isEmpty()) { // On trouve les serveurs qui ont été coupés
+			// On récupère les clés de notre Hashtable
+			Set<String> set = countFailRequettesServer.keySet();
+			String serverName;
+			Iterator<String> serverNames = set.iterator();
+			while (serverNames.hasNext()) {
+				serverName = serverNames.next();
+				Hashtable<Integer, Integer> cur = countFailRequettesServer.get(serverName);
+				if (cur != null && !cur.isEmpty()) { // On trouve les serveurs qui ont été coupés
+					// On récupère les clés de notre Hashtable
+					Set<Integer> set2 = cur.keySet();
+					Integer nbOp;
+					Iterator<Integer> nbOps = set2.iterator();
+					while (nbOps.hasNext()) {
+						nbOp = nbOps.next();
+						System.out.println(serverName+":"+nbOp+":"+countFailRequettesServer.get(serverName).get(nbOp));
+					}
+				}
+			}
+		}
+	}
+	
+	/**
+	 * <p>Simple fonction qui permet d'afficher le contenu de la variable tachesNonSecure qui va contenir un Hashtable<Integer, ArrayList<Tache>> avec Integer l'ID de la tâche mère dans l'objet de travail courant et ArrayList<Tache> une liste des taches nécessaires pour faire voter le bon résutlat par les serveurs de calcul.</p> 
+	 */
+	private void showtachesNonSecure() {
+		System.out.println("TacheID.localTaskID ; serverName ; resultat ; state ; parent_ID ; child_ID");
+		if (!tachesNonSecure.isEmpty()) { // On trouve les serveurs qui ont été coupés
+			// On récupère les clés de notre Hashtable
+			Set<Integer> set = tachesNonSecure.keySet();
+			Integer taskID;
+			Iterator<Integer> serverNames = set.iterator();
+			while (serverNames.hasNext()) {
+				taskID = serverNames.next();
+				ArrayList<Tache> cur = tachesNonSecure.get(taskID);
+				if (cur != null && !cur.isEmpty()) { // On trouve les serveurs qui ont été coupés
+					// On récupère les clés de notre Hashtable
+					for (Tache tache : cur) {
+						System.out.println(tache.getNonSecureParent_ID()+"."+tache.getID()+" ; "+tache.getAssignedTo()+" ; "+tache.getResultat()+" ; "+tache.getState()+" ; "+tache.getParent_ID()+" ; "+tache.getChild_ID());
+					}
+				}
+			}
+		}
+	}
+	/**
+	 * simple fonction pour afficher le contenu d'un ArrayList<String>.
+	 * @param listString ArrayList<String>
+	 */
+	private void showArrayListContent(ArrayList<String> listString) {
+		System.out.print("showArrayListContent: ");
+		for (String nom : listString) {
+			System.out.print(nom+"; ");
+		}
+		System.out.println();
 	}
 	
 	/**

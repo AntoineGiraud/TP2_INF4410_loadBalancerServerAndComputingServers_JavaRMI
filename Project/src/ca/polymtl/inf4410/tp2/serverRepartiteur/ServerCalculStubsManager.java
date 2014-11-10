@@ -14,6 +14,12 @@ import java.util.Set;
 
 import ca.polymtl.inf4410.tp2.shared.ServerCalculInterface;
 
+/**
+ * <p>Cette classe va nous permettre de séparer les fonctions de calcul côté serverRepartiteur et toute la gestion de la liste des serveurs de calcul.<br>
+ * Cette classe va proposer un certain nombre de fonctions utiles pour gérer la liste des serveurs de Calcul.</p>
+ * @author Antoine
+ *
+ */
 public class ServerCalculStubsManager {
 
 	private Hashtable<String, ServerCalculInterface> ServerDispos = null;

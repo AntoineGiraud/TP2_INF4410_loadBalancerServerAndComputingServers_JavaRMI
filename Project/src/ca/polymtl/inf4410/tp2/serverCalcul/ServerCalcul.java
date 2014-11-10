@@ -79,7 +79,7 @@ public class ServerCalcul implements ServerCalculInterface {
 	}
 
 	@Override
-	public Tache compute(Tache task) throws RemoteException {
+	public Tache secureCompute(Tache task) throws RemoteException {
 		double T = (double)(task.getNbOperations()-quantiteRessources)/(9*quantiteRessources);
 		double rand = Math.random();
 		if (T <= 0 || rand > T) {
