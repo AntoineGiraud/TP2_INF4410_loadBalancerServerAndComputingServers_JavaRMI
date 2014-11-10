@@ -67,6 +67,7 @@ public class ServerRepartiteur {
 	private void secureCompute(String path) {
 		// On vérifie que le fichier passé en paramètre existe sinon on arrête le programme.
 		if (!(new File(path).exists())) { System.out.println("Erreur, le fichier n'existe pas"); System.exit(0); }
+		long start = System.nanoTime();
 
 		Travail work = new Travail(path, this.tacheOperationsLoad); // On a découpé notre projet en taches
 		work.show();
@@ -153,6 +154,8 @@ public class ServerRepartiteur {
 		}
 		execServ.shutdown();
 		stubManagr.interruptServersMajWatch();
+		long end = System.nanoTime();
+		System.out.println("Temps écoulé pour le calcul en mode sécurisé : " + (end - start) + " ns");
 	}
 	
 	/**
@@ -167,6 +170,7 @@ public class ServerRepartiteur {
 	private void nonSecureCompute(String path) {
 		// On vérifie que le fichier passé en paramètre existe sinon on arrête le programme.
 		if (!(new File(path).exists())) { System.out.println("Erreur, le fichier n'existe pas"); System.exit(0); }
+		long start = System.nanoTime();
 
 		Travail work = new Travail(path, this.tacheOperationsLoad); // On a découpé notre projet en taches
 		work.show();
@@ -288,13 +292,15 @@ public class ServerRepartiteur {
 								
 							} else { // Le serveur a bien calculé notre tâche !
 								ArrayList<Tache> tasks = new ArrayList<Tache>(tachesNonSecure.get(futureTask.getNonSecureParent_ID()));
+								showtachesNonSecure();
+								System.out.println("futureTask.getID(): "+futureTask.getNonSecureParent_ID()+"."+futureTask.getID());
 								tasks.set(futureTask.getID(),futureTask);
 								tachesNonSecure.put(futureTask.getNonSecureParent_ID(),tasks);
 								System.out.println(futureTask.getAssignedTo()
 										+ " réponds pour la tâche #"+futureTask.getNonSecureParent_ID()+"."+futureTask.getID()+ " : " 
 										+ futureTask.getResultat());
-								showtachesNonSecure();
-								System.out.println(futureTask.getNonSecureParent_ID()+"."+futureTask.getID()+" computeServerResult: "+computeServerResult(futureTask));
+								// showtachesNonSecure();
+								//System.out.println(futureTask.getNonSecureParent_ID()+"."+futureTask.getID()+" computeServerResult: "+computeServerResult(futureTask));
 								
 								if (computeServerResult(futureTask) == null) {
 									if (!futureTask.hasStateFinished()) {throw new ArrayIndexOutOfBoundsException("Euhm Erreur, notre tâche arrivée ici devrait être marquée comme finie !");}
@@ -331,7 +337,7 @@ public class ServerRepartiteur {
 											}
 										}
 									}// On a fini de compter les résultats
-									System.out.println("maxCount: "+maxCount+" egaliteResultatsServeurs: "+egaliteResultatsServeurs+" maxResult"+maxResult);
+									//System.out.println("maxCount: "+maxCount+" egaliteResultatsServeurs: "+egaliteResultatsServeurs+" maxResult"+maxResult);
 									if (!serversNotDone.isEmpty()) {
 										System.out.println("On a encore du boulot !");
 										continue;
@@ -361,7 +367,6 @@ public class ServerRepartiteur {
 												tachesNonSecure.put(futureTask.getNonSecureParent_ID(),nonSecureTasks);
 												continue;
 											} catch (ArrayIndexOutOfBoundsException e) {
-												e.printStackTrace();
 												if (stubManagr.hasServers()) {
 													System.out.println("il y a moins de 50% de serveurs honêtes.");
 												}else{
@@ -371,8 +376,9 @@ public class ServerRepartiteur {
 												System.out.println("Veuillez ajouter un nouveau serveur non malicieux.");
 											
 											}
-												
+											showtachesNonSecure();
 											randomServerName = stubManagr.checkHasServersAndMaybeWaitForMore(serversInvolved);
+											System.out.println(randomServerName);
 											if (randomServerName != null && !randomServerName.isEmpty()) {											
 												Tache task = new Tache(work.Taches.get(futureTask.getNonSecureParent_ID()));
 												task.setToInProgressState();
@@ -381,6 +387,7 @@ public class ServerRepartiteur {
 												task.setID(nonSecureTasks.size());
 												nonSecureTasks.add(task);
 													futurSrvrRtrn.add(execServ.submit(new NonSecureComputeCallable(stubManagr.get(randomServerName), task)));
+												tachesNonSecure.put(futureTask.getNonSecureParent_ID(),nonSecureTasks);
 											}
 										}
 									}
@@ -402,6 +409,9 @@ public class ServerRepartiteur {
 		}
 		execServ.shutdown();
 		stubManagr.interruptServersMajWatch();
+		
+		long end = System.nanoTime();
+		System.out.println("Temps écoulé pour le calcul en mode sécurisé : " + (end - start) + " ns");
 	}
 	
 

@@ -38,7 +38,7 @@ public class ServerCalcul implements ServerCalculInterface {
 		 });
 	}
 	
-	private boolean malicious;
+	private int malicious;
 	protected int portEcouteStubRMI,
 				  quantiteRessources,
 				  portServerRMI = 5000;
@@ -68,7 +68,7 @@ public class ServerCalcul implements ServerCalculInterface {
 
 			Registry registry = LocateRegistry.getRegistry(this.ipServerRMI, this.portServerRMI);
 			registry.rebind("serverCalcul"+portEcouteStubRMI, stub);
-			System.out.println("ServerCalcul"+(malicious == true?" malicieux":"")+" ready at "+thisServerIp+":"+portEcouteStubRMI+", quantiteRessources:"+quantiteRessources+", ");
+			System.out.println("ServerCalcul"+(malicious > 0 ?" malicieux":"")+" ready at "+thisServerIp+":"+portEcouteStubRMI+", quantiteRessources:"+quantiteRessources+", ");
 		} catch (ConnectException e) {
 			System.err.println("Impossible de se connecter au registre RMI. Est-ce que rmiregistry est lancé ?");
 			System.err.println();
@@ -99,7 +99,7 @@ public class ServerCalcul implements ServerCalculInterface {
 		double rand = Math.random();
 		if (T <= 0 || rand > T) {
 			System.out.println("Acceptation tâche "+task.getNonSecureParent_ID()+"."+task.getID()+" -- taux de refus: "+(double)(((double)Math.round(T*100))/100));
-			if (malicious && Math.random() >= 0.5) {
+			if (malicious > 1 || (malicious > 0 && Math.random() >= malicious / 100)) {
 				task.setResultat((int) (rand*5000)%5000);
 				task.setToFinishedState();
 				System.out.println("Malicieux !!!");
@@ -125,7 +125,7 @@ public class ServerCalcul implements ServerCalculInterface {
         	f.createNewFile(); // Si le fichier n'existait pas on le créé
         	this.portEcouteStubRMI = 0;
         	this.quantiteRessources = 5;
-        	this.malicious = false;
+        	this.malicious = 0;
         	this.ipServerRMI = "127.0.0.1";
         	this.thisServerIp = "127.0.0.1";
         	this.portServerRMI = 5000;
@@ -143,14 +143,14 @@ public class ServerCalcul implements ServerCalculInterface {
 	        if (fileInputStream != null) { // Si on a réussi à ouvrir le fichier
 	        	this.portEcouteStubRMI = properties.getProperty("portEcouteStubRMI") == null ? 0 : Integer.valueOf(properties.getProperty("portEcouteStubRMI"));
 	        	this.quantiteRessources = properties.getProperty("quantiteRessources") == null ? 5 : Integer.valueOf(properties.getProperty("quantiteRessources"));
-	        	this.malicious = properties.getProperty("malicious") == null ? false : Boolean.valueOf(properties.getProperty("malicious"));
+	        	this.malicious = properties.getProperty("malicious") == null ? 0 : Integer.valueOf(properties.getProperty("malicious"));
 	        	this.portServerRMI = properties.getProperty("portServerRMI") == null ? 5000 : Integer.valueOf(properties.getProperty("portServerRMI"));
 	        	this.ipServerRMI = properties.getProperty("ipServerRMI") == null ? "127.0.0.1" : properties.getProperty("ipServerRMI");
 	        	this.thisServerIp = properties.getProperty("thisServerIp") == null ? "127.0.0.1" : properties.getProperty("thisServerIp");
 	        }else{
 	        	this.portEcouteStubRMI = 0;
 	        	this.quantiteRessources = 5;
-	        	this.malicious = false;
+	        	this.malicious = 0;
 	        	this.ipServerRMI = "127.0.0.1";
 	        	this.thisServerIp = "127.0.0.1";
 	        	this.portServerRMI = 5000;
@@ -165,7 +165,7 @@ public class ServerCalcul implements ServerCalculInterface {
         Properties properties = new Properties();
         properties.setProperty("portEcouteStubRMI", Integer.toString(this.portEcouteStubRMI));
         properties.setProperty("quantiteRessources", Integer.toString(this.quantiteRessources));
-        properties.setProperty("malicious", Boolean.toString(this.malicious));
+        properties.setProperty("malicious", Integer.toString(this.malicious));
         properties.setProperty("ipServerRMI", this.ipServerRMI);
         properties.setProperty("thisServerIp", this.thisServerIp);
         properties.setProperty("portServerRMI", Integer.toString(this.portServerRMI));
