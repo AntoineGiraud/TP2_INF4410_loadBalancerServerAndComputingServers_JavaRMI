@@ -199,18 +199,19 @@ public class ServerRepartiteur {
 				nonSecureTasks.add(task);
 					futurSrvrRtrn.add(execServ.submit(new NonSecureComputeCallable(stubManagr.get(randomServerName), task)));
 				// On créé une seconde tâche pour un second serveur
-				randomServerName = stubManagr.getRandomServerName(randomServerName);
+				String randomServerName2 = stubManagr.getRandomServerName(randomServerName);
 				task = new Tache(work.Taches.get(i));
 				task.setToInProgressState();
-				task.setAssignedTo(randomServerName);
+				task.setAssignedTo(randomServerName2);
 				task.setNonSecureParent_ID(i);
 				task.setID(nonSecureTasks.size());
 				nonSecureTasks.add(task);
-					futurSrvrRtrn.add(execServ.submit(new NonSecureComputeCallable(stubManagr.get(randomServerName), task)));
+					futurSrvrRtrn.add(execServ.submit(new NonSecureComputeCallable(stubManagr.get(randomServerName2), task)));
 				// On ajoute l'ArrayList des tâches crées dans l'Hashtable à la clé de l'ID de la tâche courante (i)
 				tachesNonSecure.put(i, nonSecureTasks);
 			}
-			
+			showtachesNonSecure();
+						
 			// On traite le retour des tâches.
 			while (!futurSrvrRtrn.isEmpty()) { // On boucle tant que l'on a pas traité toutes les réponses du serveur.
 				ArrayList<Future<Tache>> tamponFuturRetour = new ArrayList<Future<Tache>>(futurSrvrRtrn);
@@ -224,13 +225,13 @@ public class ServerRepartiteur {
 								boolean serverStillHere = true; // On suppose qu'il est tjs là par défaut.
 								if (futureTask.hasStateRefused()){
 									incrementCountFailRequettesServer(futureTask.getAssignedTo(), futureTask.getNbOperations());
-									System.out.println("# Tâche #"+futureTask.getID()+" refusée par "+futureTask.getAssignedTo());
+									System.out.println("# Tâche #"+futureTask.getNonSecureParent_ID()+"."+futureTask.getID()+" refusée par "+futureTask.getAssignedTo());
 								}else if (futureTask.hasStateNotDelivered()){
 									serverStillHere = stubManagr.checkServerAndMaybeRefreshList(futureTask.getAssignedTo());
-									System.out.println("# Tâche #"+futureTask.getID()+" n'a pas atteint "+futureTask.getAssignedTo());
+									System.out.println("# Tâche #"+futureTask.getNonSecureParent_ID()+"."+futureTask.getID()+" n'a pas atteint "+futureTask.getAssignedTo());
 								}else{
 									serverStillHere = stubManagr.checkServerAndMaybeRefreshList(futureTask.getAssignedTo());
-									System.out.println("# Tâche #"+futureTask.getID()+" non exécutée pour raison inconnue. Le serveur de calcul a surement crashé.");
+									System.out.println("# Tâche #"+futureTask.getNonSecureParent_ID()+"."+futureTask.getID()+" non exécutée pour raison inconnue. Le serveur de calcul a surement crashé.");
 								}
 								
 								// On vérifie que l'on a tjs des serveurs connectés.
@@ -244,24 +245,29 @@ public class ServerRepartiteur {
 									System.out.println("Les tâches du serveur "+futureTask.getAssignedTo()+" ont été anulées car il a été déconecté à un moment. la tache #"+futureTask.getID()+" ne sera plus considérée.");
 									continue;// On passe à la tâche suivante.
 								}
-								String randomServrName;
 								if (serverStillHere && futureTask.hasStateRefused() && 5 > countFailRequettesServer.get(futureTask.getAssignedTo()).get(futureTask.getNbOperations())) {
-									randomServrName = futureTask.getAssignedTo();
+									futureTask.setToInProgressState();
+									futurSrvrRtrn.add(execServ.submit(new NonSecureComputeCallable(stubManagr.get(futureTask.getAssignedTo()), futureTask)));
+									tasks.set(futureTask.getID(),futureTask);
 								}else if(serverStillHere && futureTask.hasStateRefused()){
 									// On va couper la tâche en deux car on a eu trop de refus.
-									randomServrName = futureTask.getAssignedTo();
 									Tache half = futureTask.cutInTwo();
 									half.setToInProgressState();
-									half.setAssignedTo(randomServrName); // On envera la seconde moitié à un serveur au hazard.
+									half.setAssignedTo(futureTask.getAssignedTo()); // On envera la seconde moitié à un serveur au hazard.
 									half.setParent_ID(futureTask.getID());
 									half.setNonSecureParent_ID(futureTask.getNonSecureParent_ID());
 									half.setID(tasks.size());
 									tasks.add(half);
 									futureTask.setChild_ID(half.getID());
-									futurSrvrRtrn.add(execServ.submit(new NonSecureComputeCallable(stubManagr.get(randomServrName), half)));
-									System.out.println("## T% refus trop important => division /2 de la tache pour "+randomServrName);
+									futurSrvrRtrn.add(execServ.submit(new NonSecureComputeCallable(stubManagr.get(futureTask.getAssignedTo()), half)));
+									futureTask.setToInProgressState();
+									futurSrvrRtrn.add(execServ.submit(new NonSecureComputeCallable(stubManagr.get(futureTask.getAssignedTo()), futureTask)));
+									tasks.set(futureTask.getID(),futureTask);
+									System.out.println("## T% refus trop important => division /2 de la tache pour "+futureTask.getAssignedTo());
 								}else if(serverStillHere){ // Si le serveur existe toujours on réessaie de lui envoyer la tache.
-									randomServrName = futureTask.getAssignedTo();
+									futureTask.setToInProgressState();
+									futurSrvrRtrn.add(execServ.submit(new NonSecureComputeCallable(stubManagr.get(futureTask.getAssignedTo()), futureTask)));
+									tasks.set(futureTask.getID(),futureTask);
 								}else{ // Serveur non joignable, on passe à un autre serveur... Et on doit recommencer de 0 ! ...
 									// On marque comme annulé les tâches du serveur qui vient de se déconnecter...
 									for (int i = 0; i < tasks.size(); i++) {
@@ -271,22 +277,25 @@ public class ServerRepartiteur {
 									}
 									futureTask.setID(tasks.size());// Pour ne pas écraser les tâches du serveur précédent au cas où il revienne.
 									// On s'assure que l'on se connecte bien à un nouveau serveur non présent avant !
-									randomServrName = stubManagr.getRandomServerName(findServersInvolved(tachesNonSecure.get(futureTask.getNonSecureParent_ID())));
+									String randomServrName = stubManagr.getRandomServerName(findServersInvolved(tachesNonSecure.get(futureTask.getNonSecureParent_ID())));
+									futureTask.setToInProgressState();
+									futureTask.setAssignedTo(randomServrName);
+									futurSrvrRtrn.add(execServ.submit(new NonSecureComputeCallable(stubManagr.get(randomServrName), futureTask)));
+									tasks.add(futureTask.getID(),futureTask);
 									// TODO Si jamais on retrouve un serveur qui avait été déconecté et reconecté et qu'il est choisi pour reprendre le travail, il va recommencer de 0. On pourrait code pour qu'il reprenne où il en était...
 								}
-								futureTask.setToInProgressState();
-								futureTask.setAssignedTo(randomServrName);
-								futurSrvrRtrn.add(execServ.submit(new NonSecureComputeCallable(stubManagr.get(randomServrName), futureTask)));
-								tasks.add(futureTask.getID(),futureTask);
 								tachesNonSecure.put(futureTask.getNonSecureParent_ID(),tasks);
+								
 							} else { // Le serveur a bien calculé notre tâche !
 								ArrayList<Tache> tasks = new ArrayList<Tache>(tachesNonSecure.get(futureTask.getNonSecureParent_ID()));
-								System.out.println(futureTask.getID()+" / "+tasks.size()+" // "+tachesNonSecure.get(futureTask.getNonSecureParent_ID()).size());
-								tasks.add(futureTask.getID(),futureTask);
-								
+								tasks.set(futureTask.getID(),futureTask);
+								tachesNonSecure.put(futureTask.getNonSecureParent_ID(),tasks);
 								System.out.println(futureTask.getAssignedTo()
-										+ " réponds pour la tâche #"+futureTask.getID()+ " : " 
+										+ " réponds pour la tâche #"+futureTask.getNonSecureParent_ID()+"."+futureTask.getID()+ " : " 
 										+ futureTask.getResultat());
+								showtachesNonSecure();
+								System.out.println(futureTask.getNonSecureParent_ID()+"."+futureTask.getID()+" computeServerResult: "+computeServerResult(futureTask));
+								
 								if (computeServerResult(futureTask) == null) {
 									if (!futureTask.hasStateFinished()) {throw new ArrayIndexOutOfBoundsException("Euhm Erreur, notre tâche arrivée ici devrait être marquée comme finie !");}
 									// Si on a pas d'enfant, on n'est pas supposé avoir un résultat null ici.
@@ -300,14 +309,14 @@ public class ServerRepartiteur {
 									String serversDone = "", serversNotDone = "";
 									for (Tache tache : tasks) {
 										if (tache.getParent_ID() == null && !tache.hasStateCanceled()) {
-											Integer computedResultThisServer = computeServerResult(futureTask);
+											Integer computedResultThisServer = computeServerResult(tache);
 											if (computedResultThisServer == null) {
-												serversNotDone += tache.getAssignedTo();
+												serversNotDone = serversNotDone + tache.getAssignedTo();
 												continue;
 											}else{
-												serversDone += tache.getAssignedTo();
-												if (results.contains(computedResultThisServer)){
-													int countUp = results.get(computedResultThisServer)+1;
+												serversDone = serversDone + tache.getAssignedTo();
+												if (results.containsKey(computedResultThisServer)){
+													Integer countUp = results.get(computedResultThisServer)+1;
 													results.put(computedResultThisServer, countUp);
 													if (maxCount < countUp) {
 														maxCount = countUp;
@@ -322,7 +331,10 @@ public class ServerRepartiteur {
 											}
 										}
 									}// On a fini de compter les résultats
+									System.out.println("maxCount: "+maxCount+" egaliteResultatsServeurs: "+egaliteResultatsServeurs+" maxResult"+maxResult);
 									if (!serversNotDone.isEmpty()) {
+										System.out.println("On a encore du boulot !");
+										continue;
 										// On a encore des tâches dont on doit recevoir des résultats.
 									}else{
 										//On va essayer de comparer notre résultat ..
@@ -336,8 +348,18 @@ public class ServerRepartiteur {
 											ArrayList<Tache> nonSecureTasks = new ArrayList<Tache>(tachesNonSecure.get(futureTask.getNonSecureParent_ID()));
 											String randomServerName;
 											ArrayList<String> serversInvolved = findServersInvolved(tachesNonSecure.get(futureTask.getNonSecureParent_ID()));
+											showArrayListContent(serversInvolved);
 											try {
 												randomServerName = stubManagr.getRandomServerName(serversInvolved);
+												Tache task = new Tache(work.Taches.get(futureTask.getNonSecureParent_ID()));
+												task.setToInProgressState();
+												task.setAssignedTo(randomServerName);
+												task.setNonSecureParent_ID(futureTask.getNonSecureParent_ID());
+												task.setID(nonSecureTasks.size());
+												nonSecureTasks.add(task);
+													futurSrvrRtrn.add(execServ.submit(new NonSecureComputeCallable(stubManagr.get(randomServerName), task)));
+												tachesNonSecure.put(futureTask.getNonSecureParent_ID(),nonSecureTasks);
+												continue;
 											} catch (ArrayIndexOutOfBoundsException e) {
 												e.printStackTrace();
 												if (stubManagr.hasServers()) {
@@ -347,17 +369,19 @@ public class ServerRepartiteur {
 												}
 												System.out.println("Nous avons de plus besoin d'un serveur de plus pour déterminer le résultat.");
 												System.out.println("Veuillez ajouter un nouveau serveur non malicieux.");
+											
 											}
 												
 											randomServerName = stubManagr.checkHasServersAndMaybeWaitForMore(serversInvolved);
-											
-											Tache task = new Tache(work.Taches.get(futureTask.getNonSecureParent_ID()));
-											task.setToInProgressState();
-											task.setAssignedTo(randomServerName);
-											task.setNonSecureParent_ID(futureTask.getNonSecureParent_ID());
-											task.setID(nonSecureTasks.size());
-											nonSecureTasks.add(task);
-												futurSrvrRtrn.add(execServ.submit(new NonSecureComputeCallable(stubManagr.get(randomServerName), task)));
+											if (randomServerName != null && !randomServerName.isEmpty()) {											
+												Tache task = new Tache(work.Taches.get(futureTask.getNonSecureParent_ID()));
+												task.setToInProgressState();
+												task.setAssignedTo(randomServerName);
+												task.setNonSecureParent_ID(futureTask.getNonSecureParent_ID());
+												task.setID(nonSecureTasks.size());
+												nonSecureTasks.add(task);
+													futurSrvrRtrn.add(execServ.submit(new NonSecureComputeCallable(stubManagr.get(randomServerName), task)));
+											}
 										}
 									}
 								}
@@ -367,6 +391,7 @@ public class ServerRepartiteur {
 					}
 				}
 			}
+			showtachesNonSecure();
 			System.out.println("Résultat calculé : " + work.computedResult);
 			System.out.println("Résultat attendu : " + work.expectedResult);
 			
@@ -380,18 +405,20 @@ public class ServerRepartiteur {
 	}
 	
 
-	private Integer computeServerResult(Tache futureTask) {
-		if (!futureTask.hasStateFinished()) {return null;} // ne devrait pas être le cas
-		if (futureTask.getResultat() == null) {return null;}
-		if (!(futureTask.getResultat() >= 0 && futureTask.getResultat() < 5000)) {futureTask.setResultat(futureTask.getResultat()%5000);}
+	private Integer computeServerResult(Tache task) {
+		if (!task.hasStateFinished()) {return null;}
+		if (task.getResultat() == null) {return null;}
+		if (!(task.getResultat() >= 0 && task.getResultat() < 5000)) {task.setResultat(task.getResultat()%5000);}
 		
-		ArrayList<Tache> tasks = new ArrayList<Tache>(tachesNonSecure.get(futureTask.getNonSecureParent_ID()));
-		if (futureTask.getChild_ID() == null) {
-			return futureTask.getResultat();
-		}else if(futureTask.getChild_ID() != null && tasks.contains(futureTask.getChild_ID()) && tasks.get(futureTask.getChild_ID()).getResultat() != null){
-			Integer retourChild = computeServerResult(tasks.get(futureTask.getChild_ID()));
+		ArrayList<Tache> tasks = new ArrayList<Tache>(tachesNonSecure.get(task.getNonSecureParent_ID()));
+		
+		if (task.getChild_ID() == null) {
+			return task.getResultat();
+		}else if(task.getChild_ID() != null && tasks.get(task.getChild_ID()).getResultat() != null){
+			Integer retourChild = computeServerResult(tasks.get(task.getChild_ID()));
+			System.out.println("retourChild: "+retourChild);
 			if (retourChild == null) return null;
-			else return (futureTask.getResultat() + retourChild)%5000;
+			else return (task.getResultat() + retourChild)%5000;
 		}else{
 			return null;
 		}
@@ -429,6 +456,33 @@ public class ServerRepartiteur {
 				}
 			}
 		}
+	}
+	
+	private void showtachesNonSecure() {
+		System.out.println("TacheID.localTaskID ; serverName ; resultat ; state ; parent_ID ; child_ID");
+		if (!tachesNonSecure.isEmpty()) { // On trouve les serveurs qui ont été coupés
+			// On récupère les clés de notre Hashtable
+			Set<Integer> set = tachesNonSecure.keySet();
+			Integer taskID;
+			Iterator<Integer> serverNames = set.iterator();
+			while (serverNames.hasNext()) {
+				taskID = serverNames.next();
+				ArrayList<Tache> cur = tachesNonSecure.get(taskID);
+				if (cur != null && !cur.isEmpty()) { // On trouve les serveurs qui ont été coupés
+					// On récupère les clés de notre Hashtable
+					for (Tache tache : cur) {
+						System.out.println(tache.getNonSecureParent_ID()+"."+tache.getID()+" ; "+tache.getAssignedTo()+" ; "+tache.getResultat()+" ; "+tache.getState()+" ; "+tache.getParent_ID()+" ; "+tache.getChild_ID());
+					}
+				}
+			}
+		}
+	}
+	private void showArrayListContent(ArrayList<String> listString) {
+		System.out.print("showArrayListContent: ");
+		for (String nom : listString) {
+			System.out.print(nom+"; ");
+		}
+		System.out.println();
 	}
 	
 	private void incrementCountFailRequettesServer(String serverName,Integer TaskSize) {

@@ -98,7 +98,7 @@ public class ServerCalcul implements ServerCalculInterface {
 		double T = (double)(task.getNbOperations()-quantiteRessources)/(9*quantiteRessources);
 		double rand = Math.random();
 		if (T <= 0 || rand > T) {
-			System.out.println("Acceptation tâche "+task.getID()+" -- taux de refus: "+(double)(((double)Math.round(T*100))/100));
+			System.out.println("Acceptation tâche "+task.getNonSecureParent_ID()+"."+task.getID()+" -- taux de refus: "+(double)(((double)Math.round(T*100))/100));
 			if (malicious && Math.random() >= 0.5) {
 				task.setResultat((int) (rand*5000)%5000);
 				task.setToFinishedState();
@@ -107,7 +107,7 @@ public class ServerCalcul implements ServerCalculInterface {
 				task.compute();
 			}
 		}else{
-			System.out.println("Refus       tâche "+task.getID()+" -- taux de refus: "+rand+"/"+(double)(((double)Math.round(T*100))/100));
+			System.out.println("Refus       tâche "+task.getNonSecureParent_ID()+"."+task.getID()+" -- taux de refus: "+rand+"/"+(double)(((double)Math.round(T*100))/100));
 			task.setResultat(null);
 			task.setToRefusedState();
 		}

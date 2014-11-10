@@ -189,8 +189,9 @@ public class ServerCalculStubsManager {
 		if (!this.hasServers()) throw new ArrayIndexOutOfBoundsException("Notre liste de serveurs est vide"); // On retourne une chaine vide si notre liste de serveurs est nul. On réessayera plus tard !
 		
 		Hashtable<String, ServerCalculInterface> ServerDispos = new Hashtable<String, ServerCalculInterface>(this.ServerDispos);
+		System.out.println(ServerDispos.size());
 		for (String serverName : findServersInvolved) {
-			if (ServerDispos.contains(serverName))
+			if (ServerDispos.containsKey(serverName))
 				ServerDispos.remove(serverName);
 		}
 		if (ServerDispos.isEmpty()) throw new ArrayIndexOutOfBoundsException("Il n'y a pas d'autres serveurs dans la liste moins ceux passés en paramêtre.");
