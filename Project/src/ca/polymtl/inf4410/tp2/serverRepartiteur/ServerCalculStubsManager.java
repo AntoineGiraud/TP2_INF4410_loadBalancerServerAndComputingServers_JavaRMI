@@ -5,6 +5,7 @@ import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
+import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
@@ -29,15 +30,6 @@ public class ServerCalculStubsManager {
 		this.rmiRegistryIpsToCheck = (rmiRegistryIpsToCheck != null && rmiRegistryIpsToCheck.length != 0)?rmiRegistryIpsToCheck:new String[]{"127.0.0.1"};
 		refreshServerList();
 		
-		this.updateServerListThread = new Thread() {
-			public void run() {
-				while (!this.isInterrupted()) {
-					try { sleep(2000);}
-					catch (InterruptedException e) { this.interrupt(); }
-					refreshServerList();
-				}
-			}
-		};
 	}
 
 	public boolean hasServers() {
@@ -156,7 +148,7 @@ public class ServerCalculStubsManager {
 	/**
 	 * Pour obtenir au hazard le nom d'un serveur à contacter.<br>
 	 * <em>Vous aurez ensuite plus qu'à faire une YourServerCalculManager.get(yourRandomServerName)</em>
-	 * @return String nom du serveur dans la liste Hastable des serveurs disponibles dans le RMI.
+	 * @return String nom d'un serveur dans la liste Hastable des serveurs disponibles.
 	 */
 	public synchronized String getRandomServerName() {
 		if (!this.hasServers()) throw new ArrayIndexOutOfBoundsException("Notre liste de serveurs est vide"); // On retourne une chaine vide si notre liste de serveurs est nul. On réessayera plus tard !
@@ -168,6 +160,50 @@ public class ServerCalculStubsManager {
 			serverName = serverNames.next(); // On retourne le stub du server numero random
 		return serverName;
 	}
+	/**
+	 * Même fonction que getRandomServerName() sauf que l'on s'assurera de ne pas retourner le nom de serveur passé en paramêtre
+	 * @param dontPickThisServer
+	 * @return String nom d'un serveur dans la liste Hastable des serveurs disponibles.
+	 */
+	public String getRandomServerName(String dontPickThisServer) {
+		if (!this.hasServers()) throw new ArrayIndexOutOfBoundsException("Notre liste de serveurs est vide"); // On retourne une chaine vide si notre liste de serveurs est nul. On réessayera plus tard !
+ 
+		Hashtable<String, ServerCalculInterface> ServerDispos = new Hashtable<String, ServerCalculInterface>(this.ServerDispos);
+		ServerDispos.remove(dontPickThisServer);
+		if (ServerDispos.isEmpty()) throw new ArrayIndexOutOfBoundsException("Il n'y a pas d'autres serveurs dans la liste hormis celui passé en paramêtre.");
+		
+		int random = this.rand.nextInt(ServerDispos.size());
+		Set<String> set = ServerDispos.keySet();
+		String serverName = null;
+		Iterator<String> serverNames = set.iterator();
+		for (int j = 0; j <= random; j++)
+			serverName = serverNames.next(); // On retourne le stub du server numero random
+		return serverName;
+	}
+	/**
+	 * Même fonction que getRandomServerName() sauf que l'on s'assurera de ne pas retourner le nom de serveur passé en paramêtre
+	 * @param findServersInvolved ArrayList<String> Liste de serveurs que l'on ne veut pas avoir
+	 * @return String nom d'un serveur dans la liste Hastable des serveurs disponibles.
+	 */
+	public String getRandomServerName(ArrayList<String> findServersInvolved) {
+		if (!this.hasServers()) throw new ArrayIndexOutOfBoundsException("Notre liste de serveurs est vide"); // On retourne une chaine vide si notre liste de serveurs est nul. On réessayera plus tard !
+		
+		Hashtable<String, ServerCalculInterface> ServerDispos = new Hashtable<String, ServerCalculInterface>(this.ServerDispos);
+		for (String serverName : findServersInvolved) {
+			if (ServerDispos.contains(serverName))
+				ServerDispos.remove(serverName);
+		}
+		if (ServerDispos.isEmpty()) throw new ArrayIndexOutOfBoundsException("Il n'y a pas d'autres serveurs dans la liste moins ceux passés en paramêtre.");
+		
+		int random = this.rand.nextInt(ServerDispos.size());
+		Set<String> set = ServerDispos.keySet();
+		String serverName = null;
+		Iterator<String> serverNames = set.iterator();
+		for (int j = 0; j <= random; j++)
+			serverName = serverNames.next(); // On retourne le stub du server numero random
+		return serverName;
+	}
+
 	/** Obtenir un serveur au hazard */
 	public ServerCalculInterface getRandomStub() {
 		return ServerDispos.get(getRandomServerName());
@@ -176,5 +212,97 @@ public class ServerCalculStubsManager {
 	/** Stope notre thread qui faisait une Mise A Jour régulière de notre liste de serveurs. */
 	public void interruptServersMajWatch() { this.updateServerListThread.interrupt(); }
 	/** Lance notre thread qui va faire une Mise A Jour régulière de notre liste de serveurs. */
-	public void startServersMajWatch() { this.updateServerListThread.start(); }
+	public void startServersMajWatch() {
+		updateServerListThread = new Thread() {
+			public void run() {
+				while (!this.isInterrupted()) {
+					try { sleep(2000);}
+					catch (InterruptedException e) { this.interrupt(); }
+					refreshServerList();
+				}
+			}
+		};
+		updateServerListThread.start();
+	}
+
+	public int getServersCount() {
+		return this.ServerDispos.size();
+	}
+	
+	public boolean checkServerAndMaybeRefreshList(String serverName) {
+		try {
+			if (this.hasServer(serverName) && this.get(serverName).ping()) { 
+				return true;
+			}else this.refreshServerList(); // Le serveur n'est plus joignable => refresh
+		} catch (RemoteException e) { this.refreshServerList(); } // Le serveur n'est plus joignable => refresh
+		if (this.hasServer(serverName)) {
+			try {
+				return this.get(serverName).ping();
+			} catch (RemoteException e) {return false;}
+		}else{
+			return false;
+		}
+	}
+	
+	public void checkServersAndMaybeWaitForMore() {
+		if (!this.hasServers()) { // On n'a plus de serveurs connectés !!
+			this.interruptServersMajWatch();
+			System.out.println("Aucuns serveurs de calcul disponibles. Veuillez connecter au moins un serveur de calcul pour reprendre le calcul.");
+			int waitTime = 50;
+			while (!this.hasServers()) {
+				try { Thread.sleep(waitTime); /* petite pause */ } catch (InterruptedException e) { e.printStackTrace();	}
+				this.refreshServerList();
+				if (waitTime < 3000) waitTime *=3; // on augmente le temps de refresh jq atteindre un temps de refresh de 2s
+			}
+			this.startServersMajWatch();
+		}
+	}
+	/**
+	 * 
+	 * @param atLeastThisMuchServers int on doit au moins avoir 3 serveurs.
+	 * @return boolean retourne false si l'on est pas en dessus du nb de serveur voulu. true si on doit attendre que l'on reconnecte un serveur.
+	 */
+	public boolean checkHasServersAndMaybeWaitForMore(int atLeastThisMuchServers) {
+		if (!this.hasServers() || (this.hasServers() && this.ServerDispos.size() < atLeastThisMuchServers)) { // On n'a plus de serveurs connectés !!
+			this.interruptServersMajWatch();
+			System.out.println("Aucuns serveurs de calcul disponibles. Veuillez connecter au moins "+atLeastThisMuchServers+" serveur de calcul pour reprendre le calcul.");
+			int waitTime = 50;
+			while (!this.hasServers() || (this.hasServers() && this.ServerDispos.size() < atLeastThisMuchServers)) {
+				try {Thread.sleep(500); /* petite pause */ } catch (InterruptedException e) { e.printStackTrace();	}
+				this.refreshServerList();
+				if (waitTime < 3000) waitTime *=3; // on augmente le temps de refresh jq atteindre un temps de refresh de 2s
+			}
+			this.startServersMajWatch();
+			return true;
+		}
+		return false;
+	}
+
+	public String checkHasServersAndMaybeWaitForMore(ArrayList<String> serversInvolved) {
+		int serverListSize = this.ServerDispos.size();
+		String randomServerName = null;
+		try {
+			randomServerName = this.getRandomServerName(serversInvolved);
+		} catch (ArrayIndexOutOfBoundsException e) {/*On a tjs pas assez de serveurs*/}
+		if (randomServerName == null) { // On n'a plus de serveurs connectés !!
+			this.interruptServersMajWatch();
+			int waitTime = 50;
+			while (randomServerName == null) {
+				try {Thread.sleep(500); /* petite pause */ } catch (InterruptedException e) { e.printStackTrace();	}
+				if (waitTime < 3000) waitTime *=3; // on augmente le temps de refresh jq atteindre un temps de refresh de 2s
+				this.refreshServerList();
+				try {
+					randomServerName = this.getRandomServerName(serversInvolved);
+				} catch (ArrayIndexOutOfBoundsException e) {/*On a tjs pas assez de serveurs*/}
+				if (randomServerName == null && serverListSize != this.ServerDispos.size()) {
+					serverListSize = this.ServerDispos.size();
+					System.out.println("Nous avons de plus besoin d'un serveur de plus pour déterminer le résultat.");
+					System.out.println("Veuillez ajouter un nouveau serveur non malicieux.");
+				}
+			}
+			this.startServersMajWatch();
+			return randomServerName;
+		}
+		return null;
+	}
 }

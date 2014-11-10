@@ -5,7 +5,6 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.net.InetAddress;
 import java.rmi.*;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
@@ -88,6 +87,27 @@ public class ServerCalcul implements ServerCalculInterface {
 			task.compute();
 		}else{
 			System.out.println("Refus       tâche "+task.getID()+" -- taux de refus: "+(double)(((double)Math.round(T*100))/100));
+			task.setResultat(null);
+			task.setToRefusedState();
+		}
+		return task;
+	}
+
+	@Override
+	public Tache nonSecureCompute(Tache task) throws RemoteException {
+		double T = (double)(task.getNbOperations()-quantiteRessources)/(9*quantiteRessources);
+		double rand = Math.random();
+		if (T <= 0 || rand > T) {
+			System.out.println("Acceptation tâche "+task.getID()+" -- taux de refus: "+(double)(((double)Math.round(T*100))/100));
+			if (malicious && Math.random() >= 0.5) {
+				task.setResultat((int) (rand*5000)%5000);
+				task.setToFinishedState();
+				System.out.println("Malicieux !!!");
+			}else{
+				task.compute();
+			}
+		}else{
+			System.out.println("Refus       tâche "+task.getID()+" -- taux de refus: "+rand+"/"+(double)(((double)Math.round(T*100))/100));
 			task.setResultat(null);
 			task.setToRefusedState();
 		}

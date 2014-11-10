@@ -108,7 +108,7 @@ public class Travail {
         return Ops;
 	}
 	public void show() {
-		System.out.println(this.Operations.size()+" Opérations extraites du fichier. "+tacheOperationsLoad+" tâches ont été crées");
+		System.out.println(this.Operations.size()+" Opérations extraites du fichier. "+this.Taches.size()+" tâches ont été crées");
 		System.out.println("Résultat attendu : "+this.expectedResult);
 	}
 	public void showTaches() {

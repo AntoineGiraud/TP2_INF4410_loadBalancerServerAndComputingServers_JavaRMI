@@ -8,10 +8,11 @@ public class Tache implements Serializable {
 	private ArrayList<Operation> Operations;
 	private String assignedTo = null; // Nom serveur auquel a été assigné la tache. null si personne
 	private String state;
-	private Integer resultat = null;
+	private Integer resultat = null,
+			nonSecureParent_ID = null,
+			parent_ID = null,
+			child_ID = null;
 	private int ID;
-	private int parent_ID = 0;
-	private int child_ID = 0;
 	
 	public Tache() {
 		this.Operations = new ArrayList<Operation>();
@@ -32,6 +33,16 @@ public class Tache implements Serializable {
 		this.Operations = Operations;
 		this.setToToDoState();
 		this.ID = ID;
+	}
+	public Tache(Tache tache) {
+		this.Operations = new ArrayList<Operation>(tache.Operations);
+		this.assignedTo = tache.assignedTo;
+		this.ID = tache.ID;
+		this.nonSecureParent_ID = tache.nonSecureParent_ID;
+		this.parent_ID = tache.parent_ID;
+		this.child_ID = tache.child_ID;
+		this.resultat = tache.resultat;
+		this.state = tache.state;
 	}
 	public void add(Operation Op) {
 		this.Operations.add(Op);
@@ -74,12 +85,19 @@ public class Tache implements Serializable {
 		System.out.println();
 	}
 	// State Getters & Setters
-	public String getState(){ return this.state; }
-	public void setToRefusedState(){ this.state = "Refused"; }
-	public void setToNotDeliveredState(){ this.state = "NotDelivered"; }
-	public void setToToDoState(){ this.state = "ToDo"; }
-	public void setToFinishedState(){ this.state = "finished"; } 
-	public void setToInProgressState(){ this.state = "inProgress"; }
+	public String getState(){ return state; }
+	public void setToRefusedState(){ state = "Refused"; }
+	public void setToNotDeliveredState(){ state = "NotDelivered"; }
+	public void setToToDoState(){ state = "ToDo"; }
+	public void setToFinishedState(){ state = "finished"; } 
+	public void setToInProgressState(){ state = "inProgress"; }
+	public void setToCanceledState(){ state = "Canceled"; }
+	public boolean hasStateRefused() {return (state.equals("Refused"))?true:false;}
+	public boolean hasStateNotDelivered() {return (state.equals("NotDelivered"))?true:false;}
+	public boolean hasStateToDo() {return (state.equals("ToDo"))?true:false;}
+	public boolean hasStateFinished() {return (state.equals("finished"))?true:false;}
+	public boolean hasStateInProgress() {return (state.equals("inProgress"))?true:false;}
+	public boolean hasStateCanceled() {return (state.equals("Canceled"))?true:false;}
 	// AssignedTo Getters & Setters
 	public String getAssignedTo() { return this.assignedTo; }
 	public void setAssignedTo(String randomServerName) { this.assignedTo = randomServerName; }
@@ -92,9 +110,12 @@ public class Tache implements Serializable {
 	public int getID() {return ID;}
 	public void setID(int iD) {ID = iD;}
 	// parent_ID Getters & Setters
-	public int getParent_ID() { return parent_ID;}
-	public void setParent_ID(int parent_ID) { this.parent_ID = parent_ID;}
+	public Integer getParent_ID() { return parent_ID;}
+	public void setParent_ID(Integer parent_ID) { this.parent_ID = parent_ID;}
 	// child_ID Getters & Setters
-	public int getChild_ID() { return child_ID;}
-	public void setChild_ID(int child_ID) { this.child_ID = child_ID;}
+	public Integer getChild_ID() { return child_ID;}
+	public void setChild_ID(Integer child_ID) { this.child_ID = child_ID;}
+	// nonSecureParent_ID Getters & Setters
+	public Integer getNonSecureParent_ID() {return nonSecureParent_ID;}
+	public void setNonSecureParent_ID(Integer nonSecureParent_ID) {this.nonSecureParent_ID = nonSecureParent_ID;}
 }

@@ -1,9 +1,0 @@
-prime 10835
-fib 30
-fib 20
-prime 109410
-prime 107950
-fib 20
-prime 10941
-prime 10795
-prime 1079

@@ -14,4 +14,5 @@ import java.rmi.RemoteException;
 public interface ServerCalculInterface extends Remote {
 	Tache compute(Tache task) throws RemoteException;
 	boolean ping() throws RemoteException;
+	Tache nonSecureCompute(Tache task) throws RemoteException;
 }

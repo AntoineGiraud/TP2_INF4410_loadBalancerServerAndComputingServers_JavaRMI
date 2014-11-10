@@ -1,0 +1,9 @@
+prime 40835
+fib 30
+fib 20
+prime 40941
+prime 10795
+fib 20
+prime 10941
+prime 40795
+prime 1079
