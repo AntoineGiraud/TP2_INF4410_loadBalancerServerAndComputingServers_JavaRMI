@@ -128,7 +128,7 @@ public class ServerCalcul implements ServerCalculInterface {
         	this.malicious = 0;
         	this.ipServerRMI = "127.0.0.1";
         	this.thisServerIp = "127.0.0.1";
-        	this.portServerRMI = 5000;
+        	// this.portServerRMI = 5000;
         	
         } catch (IOException e1) { e1.printStackTrace();}}
         else{
@@ -144,7 +144,7 @@ public class ServerCalcul implements ServerCalculInterface {
 	        	this.portEcouteStubRMI = properties.getProperty("portEcouteStubRMI") == null ? 0 : Integer.valueOf(properties.getProperty("portEcouteStubRMI"));
 	        	this.quantiteRessources = properties.getProperty("quantiteRessources") == null ? 5 : Integer.valueOf(properties.getProperty("quantiteRessources"));
 	        	this.malicious = properties.getProperty("malicious") == null ? 0 : Integer.valueOf(properties.getProperty("malicious"));
-	        	this.portServerRMI = properties.getProperty("portServerRMI") == null ? 5000 : Integer.valueOf(properties.getProperty("portServerRMI"));
+	        	// this.portServerRMI = properties.getProperty("portServerRMI") == null ? 5000 : Integer.valueOf(properties.getProperty("portServerRMI"));
 	        	this.ipServerRMI = properties.getProperty("ipServerRMI") == null ? "127.0.0.1" : properties.getProperty("ipServerRMI");
 	        	this.thisServerIp = properties.getProperty("thisServerIp") == null ? "127.0.0.1" : properties.getProperty("thisServerIp");
 	        }else{
@@ -153,7 +153,7 @@ public class ServerCalcul implements ServerCalculInterface {
 	        	this.malicious = 0;
 	        	this.ipServerRMI = "127.0.0.1";
 	        	this.thisServerIp = "127.0.0.1";
-	        	this.portServerRMI = 5000;
+	        	// this.portServerRMI = 5000;
 	        }
         }
 	}
@@ -168,7 +168,7 @@ public class ServerCalcul implements ServerCalculInterface {
         properties.setProperty("malicious", Integer.toString(this.malicious));
         properties.setProperty("ipServerRMI", this.ipServerRMI);
         properties.setProperty("thisServerIp", this.thisServerIp);
-        properties.setProperty("portServerRMI", Integer.toString(this.portServerRMI));
+        // properties.setProperty("portServerRMI", Integer.toString(this.portServerRMI));
 
         //Store in the properties file
         File f = new File("ServerCalcul.properties");
