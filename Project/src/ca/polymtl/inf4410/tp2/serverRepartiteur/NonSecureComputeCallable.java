@@ -6,11 +6,21 @@ import java.util.concurrent.Callable;
 import ca.polymtl.inf4410.tp2.shared.ServerCalculInterface;
 import ca.polymtl.inf4410.tp2.shared.Tache;
 
+/**
+ * Objet Callable qui sera utilisé par la classe serverRepartiteur pour gérer l'envoie des tâches et la réception de celles-ci de manière assychrone.
+ * @author Antoine
+ *
+ */
 public class NonSecureComputeCallable implements Callable<Tache> {
 
 	private ServerCalculInterface stub;
 	private Tache task;
 
+	/**
+	 * On passe au constructeur le stub du serveur à contacter et la tâche que l'on souhaite faire éxécuter par le server de calculs.
+	 * @param stub ServerCalculInterface
+	 * @param task Tache
+	 */
 	public NonSecureComputeCallable(ServerCalculInterface stub, Tache task) {
 		this.stub = stub;
 		this.task = task;

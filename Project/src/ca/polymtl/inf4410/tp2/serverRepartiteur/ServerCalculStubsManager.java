@@ -171,7 +171,7 @@ public class ServerCalculStubsManager {
 	 * @param dontPickThisServer
 	 * @return String nom d'un serveur dans la liste Hastable des serveurs disponibles.
 	 */
-	public String getRandomServerName(String dontPickThisServer) {
+	public synchronized String getRandomServerName(String dontPickThisServer) {
 		if (!this.hasServers()) throw new ArrayIndexOutOfBoundsException("Notre liste de serveurs est vide"); // On retourne une chaine vide si notre liste de serveurs est nul. On réessayera plus tard !
  
 		Hashtable<String, ServerCalculInterface> ServerDispos = new Hashtable<String, ServerCalculInterface>(this.ServerDispos);
@@ -191,7 +191,7 @@ public class ServerCalculStubsManager {
 	 * @param findServersInvolved ArrayList<String> Liste de serveurs que l'on ne veut pas avoir
 	 * @return String nom d'un serveur dans la liste Hastable des serveurs disponibles.
 	 */
-	public String getRandomServerName(ArrayList<String> findServersInvolved) {
+	public synchronized String getRandomServerName(ArrayList<String> findServersInvolved) {
 		if (!this.hasServers()) throw new ArrayIndexOutOfBoundsException("Notre liste de serveurs est vide"); // On retourne une chaine vide si notre liste de serveurs est nul. On réessayera plus tard !
 		
 		Hashtable<String, ServerCalculInterface> ServerDispos = new Hashtable<String, ServerCalculInterface>(this.ServerDispos);
@@ -211,14 +211,14 @@ public class ServerCalculStubsManager {
 	}
 
 	/** Obtenir un serveur au hazard */
-	public ServerCalculInterface getRandomStub() {
+	public synchronized ServerCalculInterface getRandomStub() {
 		return ServerDispos.get(getRandomServerName());
 	}
 
 	/** Stope notre thread qui faisait une Mise A Jour régulière de notre liste de serveurs. */
-	public void interruptServersMajWatch() { this.updateServerListThread.interrupt(); }
+	public synchronized void interruptServersMajWatch() { this.updateServerListThread.interrupt(); }
 	/** Lance notre thread qui va faire une Mise A Jour régulière de notre liste de serveurs. */
-	public void startServersMajWatch() {
+	public synchronized void startServersMajWatch() {
 		updateServerListThread = new Thread() {
 			public void run() {
 				while (!this.isInterrupted()) {
@@ -231,11 +231,11 @@ public class ServerCalculStubsManager {
 		updateServerListThread.start();
 	}
 
-	public int getServersCount() {
+	public synchronized int getServersCount() {
 		return this.ServerDispos.size();
 	}
 	
-	public boolean checkServerAndMaybeRefreshList(String serverName) {
+	public synchronized boolean checkServerAndMaybeRefreshList(String serverName) {
 		try {
 			if (this.hasServer(serverName) && this.get(serverName).ping()) { 
 				return true;
@@ -250,7 +250,7 @@ public class ServerCalculStubsManager {
 		}
 	}
 	
-	public void checkServersAndMaybeWaitForMore() {
+	public synchronized void checkServersAndMaybeWaitForMore() {
 		if (!this.hasServers()) { // On n'a plus de serveurs connectés !!
 			this.interruptServersMajWatch();
 			System.out.println("Aucuns serveurs de calcul disponibles. Veuillez connecter au moins un serveur de calcul pour reprendre le calcul.");
@@ -268,7 +268,7 @@ public class ServerCalculStubsManager {
 	 * @param atLeastThisMuchServers int on doit au moins avoir 3 serveurs.
 	 * @return boolean retourne false si l'on est pas en dessus du nb de serveur voulu. true si on doit attendre que l'on reconnecte un serveur.
 	 */
-	public boolean checkHasServersAndMaybeWaitForMore(int atLeastThisMuchServers) {
+	public synchronized boolean checkHasServersAndMaybeWaitForMore(int atLeastThisMuchServers) {
 		if (!this.hasServers() || (this.hasServers() && this.ServerDispos.size() < atLeastThisMuchServers)) { // On n'a plus de serveurs connectés !!
 			this.interruptServersMajWatch();
 			System.out.println("Aucuns serveurs de calcul disponibles. Veuillez connecter au moins "+atLeastThisMuchServers+" serveur de calcul pour reprendre le calcul.");
@@ -284,7 +284,7 @@ public class ServerCalculStubsManager {
 		return false;
 	}
 
-	public String checkHasServersAndMaybeWaitForMore(ArrayList<String> serversInvolved) {
+	public synchronized String checkHasServersAndMaybeWaitForMore(ArrayList<String> serversInvolved) {
 		int serverListSize = this.ServerDispos.size();
 		String randomServerName = null;
 		try {

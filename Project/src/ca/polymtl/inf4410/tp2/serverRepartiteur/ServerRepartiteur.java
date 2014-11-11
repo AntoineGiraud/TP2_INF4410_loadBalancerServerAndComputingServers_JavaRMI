@@ -27,7 +27,7 @@ import ca.polymtl.inf4410.tp2.shared.Tache;
  * <li>nonSecureCompute une fonction qui ve permettre de réaliser le calcul en mode non séurisé de tâches passées en paramètre.</li></ul>
  * Sont contenus dans cette classe essentielement le code pour faire fonctioner le serveur répartiteur et la logique des commandes exposées à l'utilisateur.</p>
  * <p>La gestion des serveurs de calculs disponibles et des stubs propre à chacun d'eux est géré par la classe {@link ServerCalculStubsManager}.<br>
- * Pour les fonctions de calcul des opérations contenus dans les fichiers d'opérations, nous allons utiliser la classe {@link Travail}.<br>
+ * Pour les fonctions de calcul des opérations contenues dans les fichiers d'opérations, nous allons utiliser la classe {@link Travail}.<br>
  * Celle-ci aura extrait les {@link Operation}s du fichier passé en paramètre et les aura distribués en {@link Tache}s</p>
  * <p>La méthode nonSecureCompute est plus particuliaire car elle mettra à jour la tache de l'object {@link Travail} que lorsqu'elle sera sur que le résultat a été voté par une majorité d'au moins deux {@link ServerCalcul}.</p>
  * <p>Pour plus d'informations sur les exigences du projet, veuillez vous reporter au sujet du TP et à la FAQ.
@@ -51,7 +51,7 @@ public class ServerRepartiteur {
 	}
 
 	private ServerCalculStubsManager stubManagr;
-	private int tacheOperationsLoad = 10;
+	private int tacheOperationsLoad = 30;
 	private String[] RmiRegistryIpsToCheck = {"127.0.0.1"};
 	private Hashtable<String, Hashtable<Integer, Integer>> countFailRequettesServer;
 	private Hashtable<Integer, ArrayList<Tache>> tachesNonSecure;
@@ -306,8 +306,8 @@ public class ServerRepartiteur {
 								
 							} else { // Le serveur a bien calculé notre tâche !
 								ArrayList<Tache> tasks = new ArrayList<Tache>(tachesNonSecure.get(futureTask.getNonSecureParent_ID()));
-								showtachesNonSecure();
-								System.out.println("futureTask.getID(): "+futureTask.getNonSecureParent_ID()+"."+futureTask.getID());
+								//showtachesNonSecure();
+								//System.out.println("futureTask.getID(): "+futureTask.getNonSecureParent_ID()+"."+futureTask.getID());
 								tasks.set(futureTask.getID(),futureTask);
 								tachesNonSecure.put(futureTask.getNonSecureParent_ID(),tasks);
 								System.out.println(futureTask.getAssignedTo()
